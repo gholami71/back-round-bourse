@@ -34,6 +34,25 @@ def Managementdelcalendar():
     data = request.get_json()
     return Manage.delcalendar(data)
 
+@app.route('/user/usercaptcha', methods=['POST', 'GET'])
+def captcha():
+    
+    return Manage.captcha()
+
+@app.route('/user/applyphone', methods=['POST'])
+def applyphone():
+    data = request.get_json()
+    return Manage.applyphone(data)
+
+@app.route('/user/coderegistered', methods=['POST'])
+def coderegistered():
+    data = request.get_json()
+    return Manage.coderegistered(data)
+
+
+
+
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)

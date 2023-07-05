@@ -4,6 +4,12 @@ from ast import literal_eval
 import pymongo
 import datetime
 from persiantools.jdatetime import JalaliDate
+import cv2
+from cryptography.fernet import Fernet
+import base64
+import random
+import numpy as np
+import string
 
 client = pymongo.MongoClient()
 db = client['RoundBourse']
@@ -63,5 +69,66 @@ def delcalendar(data):
     
     return json.dumps({'reply':True})   
    
+
+def captchaGenerate():
+    font = cv2.FONT_HERSHEY_COMPLEX
+    captcha = np.zeros((50,250,3), np.uint8)
+    captcha[:] = (234, 228, 228)#(random.randint(235,255),random.randint(245,255),random.randint(245,255))
+    font= cv2.FONT_HERSHEY_SIMPLEX
+    texcode = ''
+    listCharector =  string.digits
+    for i in range(1,5):
+        bottomLeftCornerOfText = (random.randint(35,45)*i,35+(random.randint(-8,8)))
+        fontScale= random.randint(7,15)/10
+        fontColor= (random.randint(0,180),random.randint(0,180),random.randint(0,180))
+        thickness= random.randint(1,2)
+        lineType= 1
+        text = str(listCharector[random.randint(0,len(listCharector)-1)])
+        texcode = texcode+(text)
+        cv2.putText(captcha,text,bottomLeftCornerOfText,font,fontScale,fontColor,thickness,lineType)
+        if random.randint(0,2)>0:
+            pt1 = (random.randint(0,250),random.randint(0,50))
+            pt2 = (random.randint(0,250),random.randint(0,50))
+            lineColor = (random.randint(0,150),random.randint(0,150),random.randint(0,150))
+            cv2.line(captcha,pt1,pt2,lineColor,1)
+    #address = 'C:\\Users\\moeen\\Desktop\\project\\pishkar\\Front\\pishkar\\public\\captcha\\'+texcode+'.jpg'
+    stringImg = base64.b64encode(cv2.imencode('.jpg', captcha)[1]).decode()
+    return [texcode,stringImg]
+
+from cryptography.fernet import Fernet
+key = Fernet.generate_key()
+print(key)
+key = 'cB76_HN8k2-NsghT55TMgxYaQhx-koK3hoArK3Nc1Zg='
+f = Fernet(key)
+
+def encrypt(msg):
+    msg = str(msg).encode()
+    msg = f.encrypt(msg)
+    return msg
+
+def decrypt(msg):
+    msg = f.decrypt(msg)
+    msg = msg.decode()
+    return msg
+
+    
+
+
+def captcha():
+    cg = captchaGenerate()
+    return json.dumps({'captcha':str(encrypt(cg[0])),'img':cg[1]})
+
+
+def applyphone(data):
+    print(data)
+    captchacode = decrypt(data['CaptchaCode'].decode())
+    return json.dumps({'reply':True})
+
+
+def coderegistered(data):
+    return json.dumps({'reply':True})
+
+
+
     
 
