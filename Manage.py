@@ -15,6 +15,7 @@ client = pymongo.MongoClient()
 db = client['RoundBourse']
 
 userpass = {'username':'admin', 'password':'12345'}
+
 def login(data):
     if data['username'] == userpass['username'] and data['password']== userpass['password']:
         cryptUserPass = crypto.encrypt(str(userpass))
@@ -44,29 +45,21 @@ def getcalendar(data):
 def setcalendar(data):  
     if atuh(data) == False:
         return json.dumps({'reply':False})
-
     date =int(data['date'])/1000
     date = datetime.datetime.fromtimestamp(date)
     date = str(JalaliDate(date)).replace('-','/')
-    
-    print(date)
     calander = db['calendar'].find_one({'holiday': date})
     if calander !=None:
         return json.dumps({'reply':False, 'msg':'تاریخ تکراری است'}) 
-
     db['calendar'].insert_one({'holiday':date})  
-   
-    print(date)  
     return json.dumps({'reply':True})   
 
 def delcalendar(data):
     if atuh(data) == False:
         return json.dumps({'reply':False, 'msg':'خطا '})
-    
     date = data['date']
     db['calendar'].delete_one({'holiday':date})
-    print(data)
-    
+
     return json.dumps({'reply':True})   
    
 
@@ -95,33 +88,16 @@ def captchaGenerate():
     stringImg = base64.b64encode(cv2.imencode('.jpg', captcha)[1]).decode()
     return [texcode,stringImg]
 
-from cryptography.fernet import Fernet
-key = Fernet.generate_key()
-print(key)
-key = 'cB76_HN8k2-NsghT55TMgxYaQhx-koK3hoArK3Nc1Zg='
-f = Fernet(key)
-
-def encrypt(msg):
-    msg = str(msg).encode()
-    msg = f.encrypt(msg)
-    return msg
-
-def decrypt(msg):
-    msg = f.decrypt(msg)
-    msg = msg.decode()
-    return msg
-
-    
 
 
 def captcha():
     cg = captchaGenerate()
-    return json.dumps({'captcha':str(encrypt(cg[0])),'img':cg[1]})
+    return json.dumps({'captcha':str(crypto.encrypt(cg[0])),'img':cg[1]})
 
 
 def applyphone(data):
-    print(data)
-    captchacode = decrypt(data['CaptchaCode'].decode())
+    captchacode = crypto.decrypt(data['CaptchaCode'].decode())
+    print(captchacode)
     return json.dumps({'reply':True})
 
 
