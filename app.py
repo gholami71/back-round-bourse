@@ -55,7 +55,10 @@ def Useratuh():
     return Manage.Useratuh(data)
 
 
-
+@app.route('/user/setprofile', methods=['POST'])
+def userSetProfile():
+    data = request.get_json()
+    return Manage.userSetProfile(data)
 
 
 
