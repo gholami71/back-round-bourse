@@ -49,6 +49,11 @@ def coderegistered():
     data = request.get_json()
     return Manage.coderegistered(data)
 
+@app.route('/user/atuh', methods=['POST'])
+def Useratuh():
+    data = request.get_json()
+    return Manage.Useratuh(data)
+
 
 
 

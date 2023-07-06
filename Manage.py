@@ -96,13 +96,51 @@ def captcha():
 
 
 def applyphone(data):
-    captchacode = crypto.decrypt(data['CaptchaCode'].decode())
-    print(captchacode)
+    captchacode = crypto.decrypt(data['CaptchaCode'])
+    if captchacode != data['UserInput']['captcha']:
+        return json.dumps({'reply':False})
+    txt = random.randint(10000,99999)
+    db['otp'].insert_one({'phone':data['UserInput']['phone'], 'codetext':str(txt), 'date':datetime.datetime.now()})
+    print(txt)
     return json.dumps({'reply':True})
+
+    
+        
 
 
 def coderegistered(data):
-    return json.dumps({'reply':True})
+    code = data['UserInput']['code']
+    phone = data['UserInput']['phone']
+    codetext = db['otp'].find_one({'phone': phone}, sort=[('date', -1)])['codetext']
+    if code != codetext:
+        return json.dumps({'reply':False})
+    phoneUser = db['users'].find_one({'phone':phone})
+    if phoneUser == None:
+        dic = {'phone':phone, 'dateregister':datetime.datetime.now(), 
+               'datecredit':datetime.datetime.now()+datetime.timedelta(days=3),
+               'label': 'pro'
+               }
+        db['users'].insert_one(dic)
+    else:
+        db['users'].update_one({'phone':phone},{'$set':{'lastlogin':datetime.datetime.now()}})
+    cookie = crypto.encrypt(data['UserInput']['phone'])
+    return json.dumps({'reply':True, 'phu':cookie})
+
+def Useratuh(data):
+    try:
+        cookie= crypto.decrypt(data['cookie'])
+        if db['users'].find_one({'phone':cookie}) == None:
+            return json.dumps({'reply':False})
+        return json.dumps({'reply':True})
+    except:
+        return json.dumps({'reply':False})
+
+
+
+    
+
+
+
 
 
 
