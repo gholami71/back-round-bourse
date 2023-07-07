@@ -60,7 +60,10 @@ def userSetProfile():
     data = request.get_json()
     return Manage.userSetProfile(data)
 
-
+@app.route('/user/getprofile', methods=['POST'])
+def userGetProfile():
+    data = request.get_json()
+    return Manage.userGetProfile(data)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)

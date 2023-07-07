@@ -139,9 +139,15 @@ def Useratuh(data):
 
     
 def userSetProfile(data):
-        print(data)
-        return json.dumps({'reply':False})
-
+    user = crypto.decrypt(data['phu'])
+    data = data['data']
+    db['users'].update_one({'phone':user},{'$set':data})
+    return json.dumps({'reply':True})
 
     
+def userGetProfile(data):
+    user = crypto.decrypt(data['phu'])
+    data = db['users'].find_one({'phone':user},{'_id':0,'dateregister':0,'datecredit':0})
+    if data == None: return json.dumps({'reply':False,'msg':'اطلاعات کاربر یافت نشد'})
+    return json.dumps({'reply':True,'data':data})
 
