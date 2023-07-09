@@ -65,26 +65,25 @@ def delcalendar(data):
 
 def captchaGenerate():
     font = cv2.FONT_HERSHEY_COMPLEX
-    captcha = np.zeros((50,250,3), np.uint8)
-    captcha[:] = (234, 228, 228)#(random.randint(235,255),random.randint(245,255),random.randint(245,255))
+    captcha = np.zeros((40,140,3), np.uint8)
+    captcha[:] = (255, 255, 255)#(random.randint(235,255),random.randint(245,255),random.randint(245,255))
     font= cv2.FONT_HERSHEY_SIMPLEX
     texcode = ''
     listCharector =  string.digits
     for i in range(1,5):
-        bottomLeftCornerOfText = (random.randint(35,45)*i,35+(random.randint(-8,8)))
-        fontScale= random.randint(7,15)/10
-        fontColor= (random.randint(0,180),random.randint(0,180),random.randint(0,180))
+        bottomLeftCornerOfText = (random.randint(20,30)*i,35+(random.randint(-5,5)))
+        fontScale= random.randint(5,12)/10
+        fontColor= (random.randint(0,180),random.randint(50,180),random.randint(70,180))
         thickness= random.randint(1,2)
-        lineType= 1
+        lineType= random.randint(1,10)
         text = str(listCharector[random.randint(0,len(listCharector)-1)])
         texcode = texcode+(text)
         cv2.putText(captcha,text,bottomLeftCornerOfText,font,fontScale,fontColor,thickness,lineType)
         if random.randint(0,2)>0:
-            pt1 = (random.randint(0,250),random.randint(0,50))
-            pt2 = (random.randint(0,250),random.randint(0,50))
-            lineColor = (random.randint(0,150),random.randint(0,150),random.randint(0,150))
+            pt1 = (random.randint(0,140),random.randint(0,40))
+            pt2 = (random.randint(0,140),random.randint(0,40))
+            lineColor = (random.randint(20,150),random.randint(40,150),random.randint(80,150))
             cv2.line(captcha,pt1,pt2,lineColor,1)
-    #address = 'C:\\Users\\moeen\\Desktop\\project\\pishkar\\Front\\pishkar\\public\\captcha\\'+texcode+'.jpg'
     stringImg = base64.b64encode(cv2.imencode('.jpg', captcha)[1]).decode()
     return [texcode,stringImg]
 
@@ -147,11 +146,16 @@ def userInfo(data):
 
 
     
-
-
-
-
-
+def userSetProfile(data):
+    user = crypto.decrypt(data['phu'])
+    data = data['data']
+    db['users'].update_one({'phone':user},{'$set':data})
+    return json.dumps({'reply':True})
 
     
+def userGetProfile(data):
+    user = crypto.decrypt(data['phu'])
+    data = db['users'].find_one({'phone':user},{'_id':0,'dateregister':0,'datecredit':0})
+    if data == None: return json.dumps({'reply':False,'msg':'اطلاعات کاربر یافت نشد'})
+    return json.dumps({'reply':True,'data':data})
 
