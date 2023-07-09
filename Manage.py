@@ -145,7 +145,7 @@ def userInfo(data):
 
 
 
-    
+    #کاربر چک شود که قبل از آپدیت در دیتابیس موجود باشد
 def userSetProfile(data):
     user = crypto.decrypt(data['phu'])
     data = data['data']
@@ -155,7 +155,8 @@ def userSetProfile(data):
     
 def userGetProfile(data):
     user = crypto.decrypt(data['phu'])
-    data = db['users'].find_one({'phone':user},{'_id':0,'dateregister':0,'datecredit':0})
+    data = db['users'].find_one({'phone':user},{'_id':0,'dateregister':0,'datecredit':0,'lastlogin':0})
     if data == None: return json.dumps({'reply':False,'msg':'اطلاعات کاربر یافت نشد'})
+    print(data)
     return json.dumps({'reply':True,'data':data})
 
