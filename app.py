@@ -54,6 +54,11 @@ def Useratuh():
     data = request.get_json()
     return Manage.Useratuh(data)
 
+@app.route('/user/userinfo', methods=['POST'])
+def userInfo():
+    data = request.get_json()
+    return Manage.userInfo(data)
+
 
 
 

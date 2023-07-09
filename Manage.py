@@ -134,6 +134,15 @@ def Useratuh(data):
         return json.dumps({'reply':True})
     except:
         return json.dumps({'reply':False})
+    
+
+def userInfo(data):
+    phone = crypto.decrypt(data['cookie'])
+    lastcredit = db['users'].find_one({'phone':phone})['datecredit'].date()
+    print(lastcredit)
+    label = db['users'].find_one({'phone':phone})['label']
+    userinfo = {'lastcredit':lastcredit, 'label':label }
+    return json.dumps({'reply':True, 'userinfo':userinfo})
 
 
 
