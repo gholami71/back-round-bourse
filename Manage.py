@@ -117,7 +117,7 @@ def coderegistered(data):
     if phoneUser == None:
         dic = {'phone':phone, 'dateregister':datetime.datetime.now(), 
                'datecredit':datetime.datetime.now()+datetime.timedelta(days=3),
-               'label': 'pro'
+               'label': 'Pro'
                }
         db['users'].insert_one(dic)
     else:
@@ -137,7 +137,28 @@ def Useratuh(data):
 
 def userInfo(data):
     user = crypto.decrypt(data['phu'])
-    info = db['users'].find_one({'phone':user},{'_id':0,'fullName':1,'lable':1})
+    info = db['users'].find_one({'phone':user},{'_id':0,'phone':1,'datecredit':1,'label':1,'companyName':1,'fullName':1,'personality':1})
+    credit = info['datecredit'] - datetime.datetime.now()
+    if credit.seconds // 3600 > 12:
+        info['creditDay'] = max(0,(credit.days+1))
+    else:
+        info['creditDay'] = max(0,(credit.days))
+    del info['datecredit']
+    if 'personality' in info.keys():
+        if info['personality'] == 'true':
+            info['name'] = info['fullName']
+            del info['companyName']
+        else:
+            info['name'] = info['companyName']
+            del info['fullName']
+        del info['personality']
+
+    if info['creditDay']==0:
+        info['label'] = ''
+    else:
+        info['label'] = info['label'].replace('Pro','پرو').replace('ProPlus','پرو پلاس').replace('Premium','پریمیوم')
+
+
     if info == None: 
         return json.dumps({'reply':False})
     return json.dumps({'reply':True, 'info':info})
