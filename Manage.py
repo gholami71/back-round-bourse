@@ -136,12 +136,11 @@ def Useratuh(data):
     
 
 def userInfo(data):
-    phone = crypto.decrypt(data['cookie'])
-    lastcredit = db['users'].find_one({'phone':phone})['datecredit'].date()
-    print(lastcredit)
-    label = db['users'].find_one({'phone':phone})['label']
-    userinfo = {'lastcredit':lastcredit, 'label':label }
-    return json.dumps({'reply':True, 'userinfo':userinfo})
+    user = crypto.decrypt(data['phu'])
+    info = db['users'].find_one({'phone':user},{'_id':0,'fullName':1,'lable':1})
+    if info == None: 
+        return json.dumps({'reply':False})
+    return json.dumps({'reply':True, 'info':info})
 
 
 
