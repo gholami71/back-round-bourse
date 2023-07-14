@@ -3,7 +3,9 @@ import pymongo
 import json
 import datetime
 import random
-
+import pandas as pd
+import dateHandler
+from bson import ObjectId
 client = pymongo.MongoClient()
 db = client['RoundBourse']
 
@@ -84,7 +86,30 @@ def userGetProfile(data):
     user = crypto.decrypt(data['phu'])
     data = db['users'].find_one({'phone':user},{'_id':0,'dateregister':0,'datecredit':0,'lastlogin':0})
     if data == None: return json.dumps({'reply':False,'msg':'اطلاعات کاربر یافت نشد'})
-    print(data)
     return json.dumps({'reply':True,'data':data})
 
 
+def setTicket(data):
+    user = crypto.decrypt(data['phu'])
+    dic = {'user':user,'title':data['ticket']['title'],'content':data['ticket']['content'],'date':datetime.datetime.now(),'reply':'','del':False}
+    db['support'].insert_one(dic)
+    return json.dumps({'reply':True})
+
+
+def getTicket(data):
+    user = crypto.decrypt(data['phu'])
+    df = pd.DataFrame(db['support'].find({'user':user},{'user':0}))
+    if len(df)==0:
+        return json.dumps({'reply':False,'msg':'سابقه تیکه خالی است'})
+    df = df.sort_values(by='date',ascending=False)
+    df = df[df['del']==False]
+    df['_id'] = [str(x) for x in df['_id']]
+    df['date'] = [dateHandler.toJalaliStr(x) for x in df['date']]
+    df = df.to_dict('records')
+    return json.dumps({'reply':True,'df':df})
+
+
+def delTicket(data):
+    user = crypto.decrypt(data['phu'])
+    db['support'].update_one({'user':user,'_id':ObjectId(data['id'])},{'$set':{'del':True}})
+    return json.dumps({'reply':True,})

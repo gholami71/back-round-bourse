@@ -79,6 +79,22 @@ def userGetProfile():
     data = request.get_json()
     return client.userGetProfile(data)
 
+@app.route('/user/setticket', methods=['POST'])
+def userSetTicket():
+    data = request.get_json()
+    return client.setTicket(data)
+
+@app.route('/user/getticket', methods=['POST'])
+def userGetTicket():
+    data = request.get_json()
+    return client.getTicket(data)
+
+
+@app.route('/user/delticket', methods=['POST'])
+def userDelTicket():
+    data = request.get_json()
+    return client.delTicket(data)
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
 
