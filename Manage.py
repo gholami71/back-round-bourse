@@ -78,3 +78,14 @@ def getDataAllUsers(data):
     df = df.to_dict('records')
     return json.dumps({'reply':True, 'df':df})
 
+
+
+def getTickets(data):
+    if atuh(data) == False:
+        return json.dumps({'reply':False, 'msg':'خطا '})
+    df = pd.DataFrame(db['support'].find())
+    df['_id'] = [str(x) for x in df['_id']]
+    df['time'] = [str(x).split(' ')[1].split('.')[0] for x in df['date']]
+    df['dateJalali'] = [dateHandler.toJalaliStr(x) for x in df['date']]
+    df = df.to_dict('records')
+    return json.dumps({'reply':True, 'df':df})

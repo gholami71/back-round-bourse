@@ -44,6 +44,13 @@ def ManagementGetDataAllUsers():
     return Manage.getDataAllUsers(data)
 
 
+#این روت برای گرفتن کل تیکت ها برای پنل مدیریت است
+@app.route('/managment/gettickets', methods=['POST'])
+def ManagementGetTickets():
+    data = request.get_json()
+    return Manage.getTickets(data)
+
+
 @app.route('/user/usercaptcha', methods=['POST', 'GET'])
 def captcha():
     return crypto.captcha()
