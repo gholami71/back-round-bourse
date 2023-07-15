@@ -7,6 +7,7 @@ from persiantools.jdatetime import JalaliDate
 from cryptography.fernet import Fernet
 import pandas as pd
 import dateHandler
+from bson import ObjectId
 
 client = pymongo.MongoClient()
 db = client['RoundBourse']
@@ -87,7 +88,14 @@ def getTickets(data):
     df['_id'] = [str(x) for x in df['_id']]
     df['time'] = [str(x).split(' ')[1].split('.')[0] for x in df['date']]
     df['dateJalali'] = [dateHandler.toJalaliStr(x) for x in df['date']]
+    df = df.drop(columns=['date'])
     df = df.to_dict('records')
     return json.dumps({'reply':True, 'df':df})
 
 
+def setReplyTicket(data):
+    if atuh(data) == False:
+        return json.dumps({'reply':False, 'msg':'خطا '})
+    data = data['ansewr']
+    db['support'].update_one({'_id':ObjectId(data['_id'])},{'$set':{'reply':data['reply']}})
+    return json.dumps({'reply':True})

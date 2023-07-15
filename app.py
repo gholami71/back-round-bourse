@@ -36,6 +36,11 @@ def Managementdelcalendar():
     data = request.get_json()
     return Manage.delcalendar(data)
 
+@app.route('/managment/setreplyticket', methods=['POST'])
+def ManagementSetReplyTicket():
+    data = request.get_json()
+    return Manage.setReplyTicket(data)
+
 
 #این روت برای گرفتن کل اطلاعات کاربران برای پنل مدیریت است
 @app.route('/management/getdataallusers', methods=['POST'])
