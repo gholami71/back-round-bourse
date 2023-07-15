@@ -9,6 +9,7 @@ from bson import ObjectId
 client = pymongo.MongoClient()
 db = client['RoundBourse']
 
+limit = {'alarms':{'Pro':10, 'ProPlus':20, 'Premium':40}}
 
 def applyphone(data):
     captchacode = crypto.decrypt(data['CaptchaCode'])
@@ -112,4 +113,33 @@ def getTicket(data):
 def delTicket(data):
     user = crypto.decrypt(data['phu'])
     db['support'].update_one({'user':user,'_id':ObjectId(data['id'])},{'$set':{'del':True}})
-    return json.dumps({'reply':True,})
+    return json.dumps({'reply':True})
+
+def userSetAlarm(data):
+    phu = crypto.decrypt(data['phu'])
+    user = db['users'].find_one({'phone':phu},{'_id':0})
+    date = user['datecredit']-datetime.datetime.now()
+    if date.days<=0 and date.seconds <=0:
+        return json.dumps({'reply':False, 'msg':'شما اشتراک ندارید'})
+    lim = limit['alarms'][user['label']]
+    numberAlarms = db['alarms'].count_documents({'phone':phu, 'active':True})
+    if numberAlarms>=lim :
+        return json.dumps({'reply':False, 'msg':f'شما مجاز به ایجاد حداکثر {lim} .هشدار میباشید' })
+    dic = data['InputUser']
+    dic['date'] = datetime.datetime.now()
+    dic['phone'] = phu
+    dic['active'] = True
+    db['alarms'].insert_one(dic)  
+    return json.dumps({'reply':True})
+
+def userGettAlarm(data):
+    phu = crypto.decrypt(data['phu'])    
+    alarms = pd.DataFrame(db['alarms'].find({'phone':phu}))
+    if len(alarms) == 0:
+        return json.dumps({'reply':False})
+    print(alarms)
+    alarms['_id'] = [str(x) for x in alarms['_id']]
+    alarms['date'] = [dateHandler.toJalaliStr(x) for x in alarms['date']]
+    alarms = alarms.to_dict('records')
+    print(alarms)
+    return json.dumps({'reply':True , 'alarms':alarms})

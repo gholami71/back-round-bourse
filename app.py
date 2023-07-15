@@ -102,6 +102,16 @@ def userDelTicket():
     data = request.get_json()
     return client.delTicket(data)
 
+@app.route('/user/setalarm', methods=['POST'])
+def userSetAlarm():
+    data = request.get_json()
+    return client.userSetAlarm(data)
+
+@app.route('/user/getalarm', methods=['POST'])
+def userGettAlarm():
+    data = request.get_json()
+    return client.userGettAlarm(data)
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
 

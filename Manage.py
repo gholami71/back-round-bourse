@@ -89,3 +89,5 @@ def getTickets(data):
     df['dateJalali'] = [dateHandler.toJalaliStr(x) for x in df['date']]
     df = df.to_dict('records')
     return json.dumps({'reply':True, 'df':df})
+
+
