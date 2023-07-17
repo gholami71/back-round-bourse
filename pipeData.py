@@ -16,6 +16,7 @@ def setTseToDb():
     df['dataInt'] = dateHandler.toDayJalaliInt()
     df['timestump'] = time.time()
     now = datetime.datetime.now()
+    print('start',now)
     df['time'] = str(now.hour) +':'+str(now.minute)+':'+str(now.second)
     df = df.to_dict('records')
     db['tse'].insert_many(df)
@@ -27,10 +28,13 @@ while True:
                 setTseToDb()
                 time.sleep(60)
             else:
+                print('1 min')
                 time.sleep(60)
         else:
+            print('5 min')
             time.sleep(60*5)
     else:
+        print('60 min')
         time.sleep(60*60)
 
 
