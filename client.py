@@ -61,7 +61,6 @@ def userInfo(data):
     if 'personality' in info.keys():
         if info['personality'] == 'true':
             info['name'] = info['fullName']
-            del info['companyName']
         else:
             info['name'] = info['companyName']
             del info['fullName']
