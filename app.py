@@ -117,6 +117,21 @@ def userGettAlarm():
     data = request.get_json()
     return client.userGettAlarm(data)
 
+@app.route('/user/getsymbols', methods=['POST'])
+def userGetSymbol():
+    data = request.get_json()
+    return client.userGetSymbol(data)
+
+@app.route('/user/delalarm', methods=['POST'])
+def userDelAlarm():
+    data = request.get_json()
+    return client.userDelAlarm(data)
+
+@app.route('/user/editalarm', methods=['POST'])
+def userEditAlarm():
+    data = request.get_json()
+    return client.userEditAlarm(data)
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
 

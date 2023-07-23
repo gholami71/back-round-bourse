@@ -136,9 +136,37 @@ def userGettAlarm(data):
     alarms = pd.DataFrame(db['alarms'].find({'phone':phu}))
     if len(alarms) == 0:
         return json.dumps({'reply':False})
-    print(alarms)
+   
     alarms['_id'] = [str(x) for x in alarms['_id']]
     alarms['date'] = [dateHandler.toJalaliStr(x) for x in alarms['date']]
     alarms = alarms.to_dict('records')
-    print(alarms)
+    
     return json.dumps({'reply':True , 'alarms':alarms})
+
+
+def userGetSymbol(data):
+    phu = crypto.decrypt(data['phu'])    
+    user = db['users'].find_one({'phone':phu})
+    if user ==None:
+        return json.dumps({'reply':False})
+    symbols = db['tse'].distinct('نماد')
+    return json.dumps({'reply':True, 'symbols':symbols})
+
+
+def userDelAlarm(data):
+    phu = crypto.decrypt(data['phu']) 
+    if(db['users'].find_one({'phone':phu}) == None):
+        return json.dumps({'reply':False})
+    db['alarms'].delete_one({'_id':ObjectId(data['id'])})
+    return json.dumps({'reply':True})
+
+def userEditAlarm(data):
+    return json.dumps({'reply':True})
+
+
+    
+
+
+        
+
+    
