@@ -85,9 +85,6 @@ def getPayamNazer():
 
 
 
-
-
-
 while True:
   if dateHandler.isWorkDay():
       if dateHandler.isTimeOpenBourse():
@@ -109,4 +106,3 @@ while True:
       print('The market is closed today, we will wait for "1 hour" at most')
       dilay = 60 - datetime.datetime.now().second
       time.sleep((60*59) + dilay)
-
