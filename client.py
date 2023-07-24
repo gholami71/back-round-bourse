@@ -54,7 +54,10 @@ def userInfo(data):
     info = db['users'].find_one({'phone':user},{'_id':0,'phone':1,'datecredit':1,'label':1,'companyName':1,'fullName':1,'personality':1})
     credit = info['datecredit'] - datetime.datetime.now()
     if credit.seconds // 3600 > 12:
-        info['creditDay'] = max(0,(credit.days+1))
+        if max(0,(credit.days+1))>0:
+            info['creditDay'] = str(max(0,(credit.days+1))) + ' روز '
+        else:
+            info['creditDay'] = str(credit.seconds // 3600) + ' ساعت '
     else:
         info['creditDay'] = max(0,(credit.days))
     del info['datecredit']
@@ -65,7 +68,6 @@ def userInfo(data):
             info['name'] = info['companyName']
             del info['fullName']
         del info['personality']
-
     if info['creditDay']==0:
         info['label'] = ''
     else:
