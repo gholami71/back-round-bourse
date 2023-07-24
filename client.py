@@ -71,7 +71,7 @@ def userInfo(data):
     if info['creditDay']==0:
         info['label'] = ''
     else:
-        info['label'] = info['label'].replace('Pro','پرو').replace('ProPlus','پرو پلاس').replace('Premium','پریمیوم')
+        info['label'] = info['label'].replace('ProPlus','پرو پلاس').replace('Pro','پرو').replace('Premium','پریمیوم')
     if info == None: 
         return json.dumps({'reply':False})
     return json.dumps({'reply':True, 'info':info})
@@ -127,10 +127,17 @@ def userSetAlarm(data):
     if numberAlarms>=lim :
         return json.dumps({'reply':False, 'msg':f'شما مجاز به ایجاد حداکثر {lim} .هشدار میباشید' })
     dic = data['InputUser']
-    dic['date'] = datetime.datetime.now()
-    dic['phone'] = phu
-    dic['active'] = True
-    db['alarms'].insert_one(dic)  
+    if '_id' not in dic.keys():
+        dic['date'] = datetime.datetime.now()
+        dic['phone'] = phu
+        dic['active'] = True
+        db['alarms'].insert_one(dic)  
+    else:
+        _id = dic['_id']
+        del dic['_id']
+        del dic['date']
+        dic['date'] = datetime.datetime.now()
+        db['alarms'].update_one({'_id':ObjectId(_id)},{'$set':dic})
     return json.dumps({'reply':True})
 
 def userGettAlarm(data):
