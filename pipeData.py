@@ -17,7 +17,7 @@ def extract_text_inside_parentheses(text):
 
 
 def setTseToDb():
-    df = pd.read_excel(requests.get('http://members.tsetmc.com/tsev2/excel/MarketWatchPlus.aspx?d=0',verify=False).content,header=2)
+    df = pd.read_excel(requests.get('http://members.tsetmc.com/tsev2/excel/MarketWatchPlus.aspx?d=0',verify=False).content,header=2, engine='openpyxl')
     df = df[~df['نماد'].str.contains(r'\d')]
     df['نماد'] = df['نماد'].apply(characters.ar_to_fa)
     df['نام'] = df['نام'].apply(characters.ar_to_fa)
@@ -86,23 +86,34 @@ def getPayamNazer():
 
 
 while True:
-  if dateHandler.isWorkDay():
-      if dateHandler.isTimeOpenBourse():
-          if dateHandler.minutePerFive():
-              setTseToDb()
-              getPayamNazer()
-              dilay = 60 - datetime.datetime.now().second
-              time.sleep(dilay)
-              print('Information received. I wait at most "60 seconds"')
-          else:
-              print('I took time, the information has not arrived, we will wait for "60 second" at most')
-              dilay = 60 - datetime.datetime.now().second
-              time.sleep(dilay)
-      else:
-          print('The working hours of the market are over. We will wait for "5 minutes" at most')
-          dilay = 60 - datetime.datetime.now().second
-          time.sleep((60*4) + dilay)
-  else:
-      print('The market is closed today, we will wait for "1 hour" at most')
-      dilay = 60 - datetime.datetime.now().second
-      time.sleep((60*59) + dilay)
+    if dateHandler.isWorkDay():
+        if dateHandler.isTimeOpenBourse():
+            if dateHandler.minutePerFive():
+                CheakingProcessTse = True
+                CheakingProcessPayamNazer = True
+                while CheakingProcessTse or CheakingProcessPayamNazer:
+                    try:
+                        if CheakingProcessTse:
+                            setTseToDb()
+                            CheakingProcessTse = False
+                        if CheakingProcessPayamNazer:
+                            getPayamNazer()
+                            CheakingProcessPayamNazer = False
+                        dilay = 60 - datetime.datetime.now().second
+                        time.sleep(dilay)
+                        print('Information received. I wait at most "60 seconds"')
+                    except:
+                        print('Crash, Sleep 5s')
+                        time.sleep(3)
+            else:
+                print('I took time, the information has not arrived, we will wait for "60 second" at most')
+                dilay = 60 - datetime.datetime.now().second
+                time.sleep(dilay)
+        else:
+            print('The working hours of the market are over. We will wait for "5 minutes" at most')
+            dilay = 60 - datetime.datetime.now().second
+            time.sleep((60*4) + dilay)
+    else:
+        print('The market is closed today, we will wait for "1 hour" at most')
+        dilay = 60 - datetime.datetime.now().second
+        time.sleep((60*59) + dilay)

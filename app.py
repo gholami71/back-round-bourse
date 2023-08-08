@@ -5,11 +5,16 @@ import Manage
 import client
 import crypto
 from waitress import serve
+import setproctitle
 
 clientDb = pymongo.MongoClient()
 db = clientDb['RoundBourse']
 app = Flask(__name__)
 CORS(app)
+
+@app.route('/', methods=['GET'])
+def index():
+    return 'Run server'
 
 @app.route('/management/login', methods=['POST'])
 def ManagementLogin():
@@ -134,8 +139,9 @@ def userEditAlarm():
     return client.userEditAlarm(data)
 
 if __name__ == '__main__':
-    #serve(app, host="0.0.0.0", port=8080,threads= 8)
-    app.run(host='0.0.0.0', debug=True)
+    setproctitle.setproctitle("BackEnd RoundTrade")
+    serve(app, host="0.0.0.0", port=2100,threads= 8)
+    #app.run(host='0.0.0.0', debug=True)
 
 
 
