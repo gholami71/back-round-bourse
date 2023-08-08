@@ -6,6 +6,8 @@ import random
 import pandas as pd
 import dateHandler
 from bson import ObjectId
+import sms
+
 client = pymongo.MongoClient()
 db = client['RoundBourse']
 
@@ -17,7 +19,7 @@ def applyphone(data):
         return json.dumps({'reply':False})
     txt = random.randint(10000,99999)
     db['otp'].insert_one({'phone':data['UserInput']['phone'], 'codetext':str(txt), 'date':datetime.datetime.now()})
-    print(txt)
+    sms.OTP(data['UserInput']['phone'], txt)
     return json.dumps({'reply':True})
 
 def coderegistered(data):
