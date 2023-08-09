@@ -30,7 +30,7 @@ def CreatePayment(data):
     data = json.dumps({
         "amount": int(amount),
         "payerIdentity": phone,
-        "returnUrl": "https://app.roundtrade.ir/returnpayment",
+        "returnUrl": "https://app.roundtrade.ir/dashboard/payment",
         "clientRefId": clientRefId
     })
     header = {
@@ -45,3 +45,11 @@ def CreatePayment(data):
         return {'reply':True,'responseCode':responseCode}
     return {'reply':False,'msg':'خطا لطفا مجدد امتحان کنید یا با پشتیبانی تماس بگیرید'}
 
+
+
+def CheckPayment(data):
+    phone = crypto.decrypt(data['phu'])
+    print(data)
+    if db['users'].find_one({'phone':phone}) == None:
+        return json.dumps({'replay':False,'msg':'خطا در احراز هویت لطفا مجدد وارد سیستم شوید'})
+    return json.dumps({'replay':False,'msg':'خطا در احراز هویت لطفا مجدد وارد سیستم شوید'})

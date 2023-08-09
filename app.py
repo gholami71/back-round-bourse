@@ -143,6 +143,11 @@ def CreatePayment():
     data = request.get_json()
     return payment.CreatePayment(data)
 
+@app.route('/payment/check', methods=['POST'])
+def CheckPayment():
+    data = request.get_json()
+    return payment.CheckPayment(data)
+
 if __name__ == '__main__':
     #setproctitle.setproctitle("BackEnd RoundTrade")
     #serve(app, host="0.0.0.0", port=2100,threads= 8)
