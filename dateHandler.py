@@ -40,3 +40,9 @@ def minutePerFive():
     m = now.minute
     if m%5 == 0: return True
     else: return False
+
+def minutePerSeven():
+    now = datetime.datetime.now()
+    m = now.minute
+    if m%5 == 2: return True
+    else: return False

@@ -3,6 +3,7 @@ import pandas as pd
 import dateHandler
 import time
 import datetime
+import sms
 client = pymongo.MongoClient()
 db = client['RoundBourse']
 
@@ -26,11 +27,11 @@ def GetAlarmsActive():
                         dff = dff.set_index('symbol').join(TseDf.set_index('نماد')).reset_index()
                         dff['compare'] = (dff['price']<dff['آخرین معامله - مقدار']) == (dff['method']=='بیشتر')
                         dff = dff[dff['compare']==True]
-                        dff['textMsg'] = 'هشدار برای "' +dff['symbol'] + '" قیمت ' +dff['method']+' '+ dff['آخرین معامله - مقدار'].astype(str)+'\n'+'roundtrade.ir'
+                        dff['textMsg'] = [dff['symbol'],dff['method']]
                         listTargetId = dff['_id'].to_list()
                         db['alarms'].update_many({'_id':{'$in':listTargetId}},{'$set':{'active':False}})
                         for x in dff.index:
-                            print(dff['phone'][x],dff['textMsg'][x])
+                            sms.smsAlarm(dff['phone'][x],dff['textMsg'][x][0],dff['textMsg'][x][1])
             elif i == 'صف':
                 dff = df[df['AlarmtType']==i]
                 if len(dff)>0:
@@ -41,11 +42,12 @@ def GetAlarmsActive():
                         dff = dff.set_index('symbol').join(TseDf.set_index('نماد')).reset_index()
                         dff['compare'] = ((dff['خرید - حجم']==0) + (dff['فروش - حجم']>0) and (dff['method']=='صف فروش شدن')) or ((dff['خرید - حجم']>0) + (dff['فروش - حجم']==0) and (dff['method']=='صف خرید شدن')) or ((dff['خرید - حجم']>0) and (dff['method']=='جمع شدن صف فروش')) or ((dff['فروش - حجم']>0) and (dff['method']=='ریختن صف خرید'))
                         dff = dff[dff['compare']==True]
-                        dff['textMsg'] = 'هشدار برای "' +dff['symbol'] + '" قیمت ' +dff['method']+' '+ dff['آخرین معامله - مقدار'].astype(str)+'\n'+'roundtrade.ir'
+                        dff['textMsg'] = [dff['symbol'],dff['method']]
                         listTargetId = dff['_id'].to_list()
                         db['alarms'].update_many({'_id':{'$in':listTargetId}},{'$set':{'active':False}})
                         for x in dff.index:
-                            print(dff['phone'][x],dff['textMsg'][x])
+                            sms.smsAlarm(dff['phone'][x],dff['textMsg'][x][0],dff['textMsg'][x][1])
+
             elif i == 'پیام ناظر':
                 dff = df[df['AlarmtType']==i]
                 if len(dff)>0:
@@ -59,17 +61,41 @@ def GetAlarmsActive():
                         dff = dff.drop(columns=['Title','News_Text'])
                         dff = dff.drop_duplicates()
                         dff = dff[dff['compare']==True]
-                        dff['textMsg'] = 'هشدار برای "' +dff['symbol'] +' :'+ dff['method']+'\n'+'roundtrade.ir'
-                        print(dff)
+                        dff['textMsg'] = [dff['symbol'],dff['method']]
                         listTargetId = dff['_id'].to_list()
                         db['alarms'].update_many({'_id':{'$in':listTargetId}}, {'$set':{'active':False}})
+                        for x in dff.index:
+                            sms.smsAlarm(dff['phone'][x],dff['textMsg'][x][0],dff['textMsg'][x][1])
 
 
 
 
 
 
+while True:
+    if dateHandler.isWorkDay():
+        if dateHandler.isTimeOpenBourse():
+            if dateHandler.minutePerSeven():
+                CheakingProcess = True
+                while CheakingProcess:
+                    try:
+                        GetAlarmsActive()
+                        dilay = 60 - datetime.datetime.now().second
+                        print('شروط بررسی شد یک دقیقه توقف"')
+                        time.sleep(dilay)
+                    except:
 
-
-
-GetAlarmsActive()
+                        print('بررسی شروط با خطا مواجه شد 3 ثانیه توقف')
+                        time.sleep(3)
+            else:
+                print('زمان بررسی شروع شروط نرسیده 60 ثانیه توقف')
+                dilay = 60 - datetime.datetime.now().second
+                time.sleep(dilay)
+        else:
+            print('ساعت کاری بازار پایان یافته 5 دقیقه توقف')
+            dilay = 60 - datetime.datetime.now().second
+            time.sleep((60*4) + dilay)
+    else:
+        print('بازار بسته است یک ساعت توقف')
+        dilay = 60 - datetime.datetime.now().second
+        time.sleep((60*59) + dilay)

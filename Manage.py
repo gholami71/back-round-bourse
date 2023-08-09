@@ -12,7 +12,7 @@ from bson import ObjectId
 client = pymongo.MongoClient()
 db = client['RoundBourse']
 
-userpass = {'username':'admin', 'password':'12345'}
+userpass = {'username':'moeen-azam', 'password':'dg123!@#'}
 
 def login(data):
     if data['username'] == userpass['username'] and data['password']== userpass['password']:
@@ -74,8 +74,8 @@ def getDataAllUsers(data):
     df['_id'] = df['_id'].astype(str)
     # ستون های که شامل تاریخ هستند رو تبدیل  تاریخ جلالی و سپس به رشته تبدیل میکنم برای اینکه بتوان به جیسون تبدیل شود
     for i in ['dateregister','datecredit','lastlogin']:
-        df[i] = [dateHandler.toJalaliStr(x) for x in df[i]]
-    print(df)
+        if i in df.columns:
+            df[i] = [dateHandler.toJalaliStr(x) for x in df[i]]
     df = df.to_dict('records')
     return json.dumps({'reply':True, 'df':df})
 
@@ -85,12 +85,15 @@ def getTickets(data):
     if atuh(data) == False:
         return json.dumps({'reply':False, 'msg':'خطا '})
     df = pd.DataFrame(db['support'].find())
-    df['_id'] = [str(x) for x in df['_id']]
-    df['time'] = [str(x).split(' ')[1].split('.')[0] for x in df['date']]
-    df['dateJalali'] = [dateHandler.toJalaliStr(x) for x in df['date']]
-    df = df.drop(columns=['date'])
-    df = df.to_dict('records')
-    return json.dumps({'reply':True, 'df':df})
+    if len(df)>0:
+        df['_id'] = [str(x) for x in df['_id']]
+        df['time'] = [str(x).split(' ')[1].split('.')[0] for x in df['date']]
+        df['dateJalali'] = [dateHandler.toJalaliStr(x) for x in df['date']]
+        df = df.drop(columns=['date'])
+        df = df.to_dict('records')
+        return json.dumps({'reply':True, 'df':df})
+    else:
+        return json.dumps({'reply':True, 'df':[]})
 
 
 def setReplyTicket(data):

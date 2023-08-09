@@ -12,6 +12,8 @@ def OTP(phone, CodeTxt):
     sms.send_by_base_number(CodeTxt, phone, '154061')
 
 
+def smsAlarm(phone,symbol,type):
+    return sms.send_by_base_number(text=str(symbol)+';'+str(type), to=phone, bodyId='155359')
 
 
 
