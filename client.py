@@ -19,6 +19,7 @@ def applyphone(data):
         return json.dumps({'reply':False})
     txt = random.randint(10000,99999)
     db['otp'].insert_one({'phone':data['UserInput']['phone'], 'codetext':str(txt), 'date':datetime.datetime.now()})
+    
     sms.OTP(data['UserInput']['phone'], txt)
     return json.dumps({'reply':True})
 

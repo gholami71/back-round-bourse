@@ -8,6 +8,7 @@ api = Api(username,password)
 sms = api.sms()
 
 def OTP(phone, CodeTxt):
+    print(CodeTxt)
     sms.send_by_base_number(CodeTxt, phone, '154061')
 
 
