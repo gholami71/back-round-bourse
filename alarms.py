@@ -22,16 +22,17 @@ def GetAlarmsActive():
                     dff['price'] = dff['price'].astype(int)
                     listTargetSymbol = list(set(dff['symbol']))
                     TseDf = pd.DataFrame(db['tse'].find({'نماد':{"$in": listTargetSymbol},'timestump':maxTimestump}))
-                    if (len(TseDf>0)):
+                    if len(TseDf)>0:
                         TseDf = TseDf[['آخرین معامله - مقدار','نماد']]
                         dff = dff.set_index('symbol').join(TseDf.set_index('نماد')).reset_index()
                         dff['compare'] = (dff['price']<dff['آخرین معامله - مقدار']) == (dff['method']=='بیشتر')
                         dff = dff[dff['compare']==True]
-                        dff['textMsg'] = [dff['symbol'],dff['method']]
+                        dff['textMsg'] = [[symbol, str(AlarmtType) + ' ('+str(method)+')'] for symbol,AlarmtType, method in zip(df['symbol'],df['AlarmtType'], df['method'])]
                         listTargetId = dff['_id'].to_list()
-                        db['alarms'].update_many({'_id':{'$in':listTargetId}},{'$set':{'active':False}})
+                        print(dff)
                         for x in dff.index:
                             sms.smsAlarm(dff['phone'][x],dff['textMsg'][x][0],dff['textMsg'][x][1])
+                        db['alarms'].update_many({'_id':{'$in':listTargetId}},{'$set':{'active':False}})
             elif i == 'صف':
                 dff = df[df['AlarmtType']==i]
                 if len(dff)>0:
@@ -42,11 +43,11 @@ def GetAlarmsActive():
                         dff = dff.set_index('symbol').join(TseDf.set_index('نماد')).reset_index()
                         dff['compare'] = ((dff['خرید - حجم']==0) + (dff['فروش - حجم']>0) and (dff['method']=='صف فروش شدن')) or ((dff['خرید - حجم']>0) + (dff['فروش - حجم']==0) and (dff['method']=='صف خرید شدن')) or ((dff['خرید - حجم']>0) and (dff['method']=='جمع شدن صف فروش')) or ((dff['فروش - حجم']>0) and (dff['method']=='ریختن صف خرید'))
                         dff = dff[dff['compare']==True]
-                        dff['textMsg'] = [dff['symbol'],dff['method']]
+                        dff['textMsg'] = [[symbol, str(AlarmtType) + ' ('+str(method)+')'] for symbol,AlarmtType, method in zip(df['symbol'],df['AlarmtType'], df['method'])]
                         listTargetId = dff['_id'].to_list()
-                        db['alarms'].update_many({'_id':{'$in':listTargetId}},{'$set':{'active':False}})
                         for x in dff.index:
                             sms.smsAlarm(dff['phone'][x],dff['textMsg'][x][0],dff['textMsg'][x][1])
+                        db['alarms'].update_many({'_id':{'$in':listTargetId}},{'$set':{'active':False}})
 
             elif i == 'پیام ناظر':
                 dff = df[df['AlarmtType']==i]
@@ -61,11 +62,11 @@ def GetAlarmsActive():
                         dff = dff.drop(columns=['Title','News_Text'])
                         dff = dff.drop_duplicates()
                         dff = dff[dff['compare']==True]
-                        dff['textMsg'] = [dff['symbol'],dff['method']]
+                        dff['textMsg'] = [[symbol, str(AlarmtType) + ' ('+str(method)+')'] for symbol,AlarmtType, method in zip(df['symbol'],df['AlarmtType'], df['method'])]
                         listTargetId = dff['_id'].to_list()
-                        db['alarms'].update_many({'_id':{'$in':listTargetId}}, {'$set':{'active':False}})
                         for x in dff.index:
                             sms.smsAlarm(dff['phone'][x],dff['textMsg'][x][0],dff['textMsg'][x][1])
+                        db['alarms'].update_many({'_id':{'$in':listTargetId}}, {'$set':{'active':False}})
 
 
 
@@ -88,7 +89,7 @@ while True:
                         print('بررسی شروط با خطا مواجه شد 3 ثانیه توقف')
                         time.sleep(3)
             else:
-                print('زمان بررسی شروع شروط نرسیده 60 ثانیه توقف')
+                print('زمان بررسی شروط نرسیده 60 ثانیه توقف')
                 dilay = 60 - datetime.datetime.now().second
                 time.sleep(dilay)
         else:

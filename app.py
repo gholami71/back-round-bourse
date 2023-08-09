@@ -6,7 +6,7 @@ import client
 import crypto
 from waitress import serve
 import setproctitle
-
+import payment
 clientDb = pymongo.MongoClient()
 db = clientDb['RoundBourse']
 app = Flask(__name__)
@@ -137,6 +137,11 @@ def userDelAlarm():
 def userEditAlarm():
     data = request.get_json()
     return client.userEditAlarm(data)
+
+@app.route('/payment/create', methods=['POST'])
+def CreatePayment():
+    data = request.get_json()
+    return payment.CreatePayment(data)
 
 if __name__ == '__main__':
     #setproctitle.setproctitle("BackEnd RoundTrade")
