@@ -11,7 +11,7 @@ import sms
 client = pymongo.MongoClient()
 db = client['RoundBourse']
 
-limit = {'alarms':{'Pro':10, 'ProPlus':20, 'Premium':40}}
+limit = {'alarms':{'pro':10, 'proplus':20, 'premium':40}}
 
 def applyphone(data):
     captchacode = crypto.decrypt(data['CaptchaCode'])
@@ -33,7 +33,7 @@ def coderegistered(data):
     if phoneUser == None:
         dic = {'phone':phone, 'dateregister':datetime.datetime.now(), 
                'datecredit':datetime.datetime.now()+datetime.timedelta(days=3),
-               'label': 'Pro'
+               'label': 'pro'
                }
         db['users'].insert_one(dic)
     else:
@@ -74,7 +74,7 @@ def userInfo(data):
     if info['creditDay']==0:
         info['label'] = ''
     else:
-        info['label'] = info['label'].replace('ProPlus','پرو پلاس').replace('Pro','پرو').replace('Premium','پریمیوم')
+        info['label'] = info['label'].replace('proplus','پرو پلاس').replace('pro','پرو').replace('premium','پریمیوم')
     if info == None: 
         return json.dumps({'reply':False})
     return json.dumps({'reply':True, 'info':info})

@@ -1,0 +1,70 @@
+*{
+    margin: 0px;
+    padding: 0px;
+    direction: rtl;
+}
+
+$colorJellyfish:#26C5A8;
+$colorMangoOrange:#FF7554;
+$colorLightOrange:#ECBB3E;
+$colorBalticSea:#222B40;
+$colorMidnight:#111C36;
+$colorPurpleBlue:#7332FE;
+$colorSoftBlue:#5398FF;
+$colorJordyBlue:#8BA7F0;
+$colorMilkWhite:#FFFFFF;
+$colorWhiteRock:#ECE8E5;
+$colorLinen:#F3F1EF;
+$colorQuillGrey:#D9D9D9;
+
+html, body{
+    height: 100%;
+    width: 100%;
+    background: $colorMidnight;
+    color: $colorLinen;
+}
+
+.conteiner{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    .title{
+        margin-top: 150px;
+        width: 250px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-around;
+
+        img{
+            width: 15%;
+        }
+        h3{
+            font-size: 18pt;
+            color: $colorMilkWhite;
+        }
+    }
+    h4{
+        color: $colorWhiteRock;
+        font-size: 13pt;
+        margin-top: 80px;
+
+    }
+    p{
+        color: $colorWhiteRock;
+        font-size: 11pt;
+        margin-top: 80px;
+
+    }
+    a{
+        text-decoration: none;
+        color: $colorMilkWhite;
+        background: $colorSoftBlue;
+        padding: 5px 15px;
+        margin-top: 80px;
+        border-radius: 10px;
+    }
+
+}

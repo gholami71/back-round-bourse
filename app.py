@@ -148,7 +148,7 @@ def CheckPayment():
     data = request.get_json()
     return payment.CheckPayment(data)
 
-@app.route('/payment/verify', methods=['POST'])
+@app.route('/payment/verify', methods=['POST','GET'])
 def VerifyPayment():
     code = request.form.get('code')
     refid = request.form.get('refid')
@@ -156,6 +156,8 @@ def VerifyPayment():
     cardnumber = request.form.get('cardnumber')
     cardhashpan = request.form.get('cardhashpan')
     return payment.VerifyPeyment(code,refid,clientrefid,cardnumber,cardhashpan)
+
+
 
 if __name__ == '__main__':
     #setproctitle.setproctitle("BackEnd RoundTrade")

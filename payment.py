@@ -6,7 +6,7 @@ import datetime
 import json
 import ast
 import crypto
-
+from flask import render_template
 client = pymongo.MongoClient()
 db = client['RoundBourse']
 token = 'lB-LRA7xf7eDZS7bi1G5HRWHgHiZIcw5i-Y8_fBEwxU'
@@ -46,14 +46,15 @@ error_messages = {
 
 dicPrice= {
     'pro':{'1':1000,'3':3000,'6':6000,'12':12000},
-    'proPlus':{'1':10000,'3':30000,'6':60000,'12':120000},
-    'primium':{'1':100000,'3':300000,'6':600000,'12':1200000},
+    'proplus':{'1':10000,'3':30000,'6':60000,'12':120000},
+    'premium':{'1':100000,'3':300000,'6':600000,'12':1200000},
 }
 
 def CreatePayment(data):
     phone = crypto.decrypt(data['phu'])
     if db['users'].find_one({'phone':phone}) == None:
         return json.dumps({'replay':False,'msg':'خطا در احراز هویت لطفا مجدد وارد سیستم شوید'})
+    print(data)
     amount = dicPrice[data['level']][str(data['period']['time'])]
     amount = 1000 # موقت برای توکن تست
     clientRefId = str(random.randint(100000,999999))
@@ -89,20 +90,27 @@ def CheckPayment(data):
 def VerifyPeyment(code,refid,clientrefid,cardnumber,cardhashpan):
     peyment = db['payments'].find_one({'clientRefId':clientrefid})
     if peyment == None:
-        return 'یافت نشد'
+        dicres = {'status':False,'msg':'تراکنش یافت نشد'}
+        return render_template('returnPayment.html',dicres=dicres)
     db['payments'].update_one({'clientRefId':clientrefid},{'$set':{'refid':refid,'cardnumber':cardnumber,'cardhashpan':cardhashpan,'addenUser':False}})
     if int(refid)<=49:
-        return error_messages[int(refid)]
+        try:
+            dicres = {'status':False,'msg':error_messages[int(refid)]}
+            return render_template('returnPayment.html',dicres=dicres)
+        except:
+            dicres = {'status':False,'msg':'خطای نامشخص لطفا مجدد تلاش کنید یا با پشتیبانی تماس حاصل کنید'}
+            return render_template('returnPayment.html',dicresپ=dicres)
     data = json.dumps({"refId": str(refid),"amount": int(peyment['amount'])})
     header = {'Content-Type': 'application/json','Authorization': f'Bearer {token}'}
     response = requests.post(url=url+'/v2/pay/verify',data=data,headers=header)
     if response.status_code != 200:
-        return 'خطای ناشناخته'
+        dicres = {'status':False,'msg':'خطای نامشخص لطفا مجدد تلاش کنید یا با پشتیبانی تماس حاصل کنید'}
+        return render_template('returnPayment.html',dicresپ=dicres)
     user = db['users'].find_one({'phone':peyment['payerIdentity']})
-    label = str(user['label']).replace('ProPlus','2').replace('Premium','3').replace('Pro','1')
+    label = str(user['label']).replace('proplus','2').replace('premium','3').replace('pro','1')
     if label not in ['1','2','3']: label = '0'
     label = int(label)
-    level = str(peyment['level']).replace('ProPlus','2').replace('Premium','3').replace('Pro','1')
+    level = str(peyment['level']).replace('proplus','2').replace('premium','3').replace('pro','1')
     if level not in ['1','2','3']: level = '0'
     level = int(level)
     if label>=level:
@@ -112,4 +120,11 @@ def VerifyPeyment(code,refid,clientrefid,cardnumber,cardhashpan):
         datecredit = datetime.datetime.now() + datetime.timedelta(days=int(peyment['period']*30))
     db['users'].update_one({'phone':peyment['payerIdentity']},{'$set':{'label':peyment['level'],'datecredit':datecredit}})
     db['payments'].update_one({'clientRefId':clientrefid},{'$set':{'addenUser':True}})
-    return f'code:{code}\nrefid:{refid}\nclientrefid:{clientrefid}\ncardnumber:{cardnumber}\ncardhashpan:{cardhashpan}'
+    dicres = {'status':True,'msg':'تراکنش موفق'}
+    return render_template('returnPayment.html',dicres=dicres)
+
+
+def test():
+    dicres = {'status':False,'msg':error_messages[int(12)]}
+
+    return render_template('returnPayment.html',dicres=dicres)

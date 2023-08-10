@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>رند ترید</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    </head>
+    <body>
+        {% if dicres.status %}
+            <div class='conteiner positive'>
+                <div class='title'>
+                    <img src="{{ url_for('static', filename='positive.svg') }}" alt="positive">
+                    <h3>تراکنش موفق</h3>
+                </div>
+                <h4>{{dicres.msg}}</h4>
+                <a href='https://app.roundtrade.ir/dashboard'>بازگشت به برنامه</a>
+            </div>
+        {% else %}
+            <div class='conteiner negative'>
+                <div class='title'>
+                    <img src="{{ url_for('static', filename='negative.svg') }}" alt="negative">
+                    <h3>تراکنش ناموفق</h3>
+                </div>
+                <h4>{{dicres.msg}}</h4>
+                <a href='https://app.roundtrade.ir/dashboard'>بازگشت به برنامه</a>
+                <p>در صورت کسر وجه از حساب بانکی، حداکثر تا 2 ساعت دیگر باز خواهد گشت</p>
+            </div>
+        {% endif %}
+    </body>
+</html>
