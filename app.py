@@ -138,6 +138,12 @@ def userEditAlarm():
     data = request.get_json()
     return client.userEditAlarm(data)
 
+@app.route('/user/getexplor', methods=['POST'])
+def userGetexplor():
+    data = request.get_json()
+    return client.userGetexplor(data)
+
+
 @app.route('/payment/create', methods=['POST'])
 def CreatePayment():
     data = request.get_json()
