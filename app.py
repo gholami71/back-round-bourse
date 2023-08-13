@@ -158,7 +158,6 @@ def VerifyPayment():
     return payment.VerifyPeyment(code,refid,clientrefid,cardnumber,cardhashpan)
 
 
-
 if __name__ == '__main__':
     #setproctitle.setproctitle("BackEnd RoundTrade")
     #serve(app, host="0.0.0.0", port=2100,threads= 8)

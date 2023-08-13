@@ -99,13 +99,13 @@ def VerifyPeyment(code,refid,clientrefid,cardnumber,cardhashpan):
             return render_template('returnPayment.html',dicres=dicres)
         except:
             dicres = {'status':False,'msg':'خطای نامشخص لطفا مجدد تلاش کنید یا با پشتیبانی تماس حاصل کنید'}
-            return render_template('returnPayment.html',dicresپ=dicres)
+            return render_template('returnPayment.html',dicres=dicres)
     data = json.dumps({"refId": str(refid),"amount": int(peyment['amount'])})
     header = {'Content-Type': 'application/json','Authorization': f'Bearer {token}'}
     response = requests.post(url=url+'/v2/pay/verify',data=data,headers=header)
     if response.status_code != 200:
         dicres = {'status':False,'msg':'خطای نامشخص لطفا مجدد تلاش کنید یا با پشتیبانی تماس حاصل کنید'}
-        return render_template('returnPayment.html',dicresپ=dicres)
+        return render_template('returnPayment.html',dicres=dicres)
     user = db['users'].find_one({'phone':peyment['payerIdentity']})
     label = str(user['label']).replace('proplus','2').replace('premium','3').replace('pro','1')
     if label not in ['1','2','3']: label = '0'
@@ -115,9 +115,10 @@ def VerifyPeyment(code,refid,clientrefid,cardnumber,cardhashpan):
     level = int(level)
     if label>=level:
         datecredit = max(user['datecredit'],datetime.datetime.now())
-        datecredit = datecredit + datetime.timedelta(days=int(peyment['period']*30))
+        addenDay = int(peyment['period'])*31
+        datecredit = datecredit + datetime.timedelta(days=addenDay)
     else:
-        datecredit = datetime.datetime.now() + datetime.timedelta(days=int(peyment['period']*30))
+        datecredit = datetime.datetime.now() + datetime.timedelta(days=int(peyment['period'])*30)
     db['users'].update_one({'phone':peyment['payerIdentity']},{'$set':{'label':peyment['level'],'datecredit':datecredit}})
     db['payments'].update_one({'clientRefId':clientrefid},{'$set':{'addenUser':True}})
     dicres = {'status':True,'msg':'تراکنش موفق'}
