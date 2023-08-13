@@ -13,6 +13,19 @@ db = client['RoundBourse']
 
 limit = {'alarms':{'pro':10, 'proplus':20, 'premium':40}}
 
+def AllowExplor(data):
+    try:
+        user = crypto.decrypt(data['phu'])
+    except:
+        return {'reply':False,'msg':'ورود با مشکل مواجه شده است لطفا مجددا وارد شوید'}
+    print(user)
+    user = db['users'].find_one({'phone':str(user)})
+    if user['datecredit']<datetime.datetime.now():
+        return {'reply':False,'msg':'اشتراک شما پایان یافته'}
+
+    return {'reply':True,'user':user}
+
+
 def applyphone(data):
     captchacode = crypto.decrypt(data['CaptchaCode'])
     if captchacode != data['UserInput']['captcha']:
@@ -181,4 +194,19 @@ def userEditAlarm(data):
 
         
 
-    
+def userGetexplor(data):
+    allow = AllowExplor(data)
+    if allow['reply'] == False:
+        return json.dumps(allow)
+    user = allow['user']['phone']
+    data = data['inp']
+
+    if data['type'] == 'indicator':
+        if data['indicator'] == 'rsi':
+            df =0
+
+
+
+    print(data)
+
+    return json.dumps({'reply':False})
