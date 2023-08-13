@@ -29,10 +29,9 @@ def AllowExplor(data):
 def applyphone(data):
     captchacode = crypto.decrypt(data['CaptchaCode'])
     if captchacode != data['UserInput']['captcha']:
-        return json.dumps({'reply':False})
+        return json.dumps({'reply':False,'msg':'کد کپچا صحیح نیست'})
     txt = random.randint(10000,99999)
     db['otp'].insert_one({'phone':data['UserInput']['phone'], 'codetext':str(txt), 'date':datetime.datetime.now()})
-    
     sms.OTP(data['UserInput']['phone'], txt)
     return json.dumps({'reply':True})
 

@@ -102,3 +102,30 @@ def setReplyTicket(data):
     data = data['ansewr']
     db['support'].update_one({'_id':ObjectId(data['_id'])},{'$set':{'reply':data['reply']}})
     return json.dumps({'reply':True})
+
+def Discount(data):
+    if atuh(data) == False:
+        return json.dumps({'reply':False, 'msg':'خطا '})
+    del data['key']
+    data['date'] = datetime.datetime.fromtimestamp(int(data['date'])/1000)
+    if data['type'] == 'percent':
+        data['value'] = min(int(data['value']),100)
+    check = db['discount'].find_one({'code':data['code']})
+    if check != None:
+        return json.dumps({'reply':False, 'msg':'این کد قبلا ثبت شده'})
+    data['use'] = 0
+    db['discount'].insert_one(data)
+    return json.dumps({'reply':True, 'msg':'ثبت شد '})
+
+
+def GetDiscount(data):
+    if atuh(data) == False:
+        return json.dumps({'reply':False, 'msg':'خطا '})
+    df = pd.DataFrame(db['discount'].find({}))
+    if len(df)==0:
+        return json.dumps({'reply':False, 'msg':'کد تخفیف خالی است '})
+    df['date'] = df['date'].apply(dateHandler.toJalaliStr)
+    df['_id'] = df['date'].apply(str)
+    df['type'] = df['type'].replace('toman','تومان').replace('percent','درصد')
+    df = df.to_dict('records')
+    return json.dumps({'reply':True, 'df':df})

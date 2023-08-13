@@ -48,6 +48,18 @@ def ManagementSetReplyTicket():
     return Manage.setReplyTicket(data)
 
 
+@app.route('/management/discount', methods=['POST'])
+def ManagementDiscount():
+    data = request.get_json()
+    return Manage.Discount(data)
+
+
+@app.route('/management/getdiscount', methods=['POST'])
+def ManagementGetDiscount():
+    data = request.get_json()
+    return Manage.GetDiscount(data)
+
+
 #این روت برای گرفتن کل اطلاعات کاربران برای پنل مدیریت است
 @app.route('/management/getdataallusers', methods=['POST'])
 def ManagementGetDataAllUsers():
