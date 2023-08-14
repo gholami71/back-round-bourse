@@ -100,12 +100,12 @@ def CheckPayment(data):
             dic['pricePayHorof'] = dic['priceBaseHorof']
             dic['codeMsg'] = 'کد تخفیف یافت نشد'
             dic['codestatus'] = False
-        if datetime.datetime.now() > code['date']:
+        elif datetime.datetime.now() > code['date']:
             dic['pricePayInt'] = dic['priceBaseInt']
             dic['pricePayHorof'] = dic['priceBaseHorof']
             dic['codeMsg'] = 'کد تخفیف منقضی شده است'
             dic['codestatus'] = False
-        if int(code['count'])<=int(code['use']):
+        elif int(code['count'])<=int(code['use']):
             dic['pricePayInt'] = dic['priceBaseInt']
             dic['pricePayHorof'] = dic['priceBaseHorof']
             dic['codeMsg'] = 'ظرفیت مصرف کد تخفیف تمام شده است'
@@ -123,13 +123,12 @@ def CheckPayment(data):
                 dic['codeMsg'] = f'{value} تومان تخفیف اعمال خواهد شد'
                 dic['pricePayInt'] = int(dic['priceBaseInt'] - value)
                 dic['pricePayHorof'] = digits.to_word(dic['pricePayInt'])
-
+        return json.dumps({'reply':True,'df':dic})
     else:
         dic['pricePayInt'] = dic['priceBaseInt']
         dic['pricePayHorof'] = dic['priceBaseHorof']
         dic['codeMsg'] = ''
         dic['codestatus'] = False
-
     return json.dumps({'reply':True,'df':dic})
 
 
