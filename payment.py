@@ -6,6 +6,8 @@ import datetime
 import json
 import ast
 import crypto
+from persiantools import characters, digits
+
 from flask import render_template
 client = pymongo.MongoClient()
 db = client['RoundBourse']
@@ -81,10 +83,54 @@ def CreatePayment(data):
 
 def CheckPayment(data):
     phone = crypto.decrypt(data['phu'])
-    print(data)
     if db['users'].find_one({'phone':phone}) == None:
-        return json.dumps({'replay':False,'msg':'خطا در احراز هویت لطفا مجدد وارد سیستم شوید'})
-    return json.dumps({'replay':False,'msg':'خطا در احراز هویت لطفا مجدد وارد سیستم شوید'})
+        return json.dumps({'reply':False,'msg':'خطا در احراز هویت لطفا مجدد وارد سیستم شوید'})
+    try:
+        dic = {'label':int(str(data['data']['level']).replace('proplus','2').replace('premium','3').replace('pro','1'))}
+        dic = {'labelName':str(data['data']['level']).replace('proplus','پروپلاس').replace('premium','پریمیوم').replace('pro','پرو')}
+        dic['period'] = str(data['data']['time']).replace('1','یکماهه').replace('2','دوماهه').replace('3','سه ماهه').replace('6','شش ماهه').replace('12','یکساله ماهه')
+        dic['priceBaseInt'] = dicPrice[data['data']['level']][data['data']['time']]
+        dic['priceBaseHorof'] = digits.to_word(dicPrice[data['data']['level']][data['data']['time']])
+    except:
+        return json.dumps({'reply':False,'msg':'خطا در تشخیص بسته لطفا مجددا بسته اشتراک را انتخاب کنید'})
+    if len(data['code'])>0:
+        code = db['discount'].find_one({'code':data['code']})
+        if code == None:
+            dic['pricePayInt'] = dic['priceBaseInt']
+            dic['pricePayHorof'] = dic['priceBaseHorof']
+            dic['codeMsg'] = 'کد تخفیف یافت نشد'
+            dic['codestatus'] = False
+        if datetime.datetime.now() > code['date']:
+            dic['pricePayInt'] = dic['priceBaseInt']
+            dic['pricePayHorof'] = dic['priceBaseHorof']
+            dic['codeMsg'] = 'کد تخفیف منقضی شده است'
+            dic['codestatus'] = False
+        if int(code['count'])<=int(code['use']):
+            dic['pricePayInt'] = dic['priceBaseInt']
+            dic['pricePayHorof'] = dic['priceBaseHorof']
+            dic['codeMsg'] = 'ظرفیت مصرف کد تخفیف تمام شده است'
+            dic['codestatus'] = False
+        else:
+            dic['codestatus'] = True
+            if code['type'] == 'percent':
+                value = code['value']
+                dic['codeMsg'] = f'{value} % تخفیف اعمال خواهد شد'
+                value = int(value)/100
+                dic['pricePayInt'] = int(dic['priceBaseInt'] * (1-value))
+                dic['pricePayHorof'] = digits.to_word(dic['pricePayInt'])
+            else:
+                value = code['value']
+                dic['codeMsg'] = f'{value} تومان تخفیف اعمال خواهد شد'
+                dic['pricePayInt'] = int(dic['priceBaseInt'] - value)
+                dic['pricePayHorof'] = digits.to_word(dic['pricePayInt'])
+
+    else:
+        dic['pricePayInt'] = dic['priceBaseInt']
+        dic['pricePayHorof'] = dic['priceBaseHorof']
+        dic['codeMsg'] = ''
+        dic['codestatus'] = False
+
+    return json.dumps({'reply':True,'df':dic})
 
 
 def VerifyPeyment(code,refid,clientrefid,cardnumber,cardhashpan):

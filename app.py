@@ -59,6 +59,10 @@ def ManagementGetDiscount():
     data = request.get_json()
     return Manage.GetDiscount(data)
 
+@app.route('/management/offdiscount', methods=['POST'])
+def ManagementOffDiscount():
+    data = request.get_json()
+    return Manage.OffDiscount(data)
 
 #این روت برای گرفتن کل اطلاعات کاربران برای پنل مدیریت است
 @app.route('/management/getdataallusers', methods=['POST'])
@@ -161,7 +165,8 @@ def CreatePayment():
     data = request.get_json()
     return payment.CreatePayment(data)
 
-@app.route('/payment/check', methods=['POST'])
+
+@app.route('/payment/checkperpayment', methods=['POST'])
 def CheckPayment():
     data = request.get_json()
     return payment.CheckPayment(data)

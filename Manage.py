@@ -114,6 +114,7 @@ def Discount(data):
     if check != None:
         return json.dumps({'reply':False, 'msg':'این کد قبلا ثبت شده'})
     data['use'] = 0
+    data['active'] = True
     db['discount'].insert_one(data)
     return json.dumps({'reply':True, 'msg':'ثبت شد '})
 
@@ -121,11 +122,22 @@ def Discount(data):
 def GetDiscount(data):
     if atuh(data) == False:
         return json.dumps({'reply':False, 'msg':'خطا '})
-    df = pd.DataFrame(db['discount'].find({}))
+    df = pd.DataFrame(db['discount'].find({'active':True},{}))
     if len(df)==0:
         return json.dumps({'reply':False, 'msg':'کد تخفیف خالی است '})
     df['date'] = df['date'].apply(dateHandler.toJalaliStr)
-    df['_id'] = df['date'].apply(str)
+    df['_id'] = df['_id'].apply(str)
     df['type'] = df['type'].replace('toman','تومان').replace('percent','درصد')
     df = df.to_dict('records')
     return json.dumps({'reply':True, 'df':df})
+
+
+
+
+def OffDiscount(data):
+    if atuh(data) == False:
+        return json.dumps({'reply':False, 'msg':'خطا '})
+    print(data)
+    id = ObjectId(data['id'])
+    db['discount'].update_one({'_id':id},{'$set':{'active':False}})
+    return json.dumps({'reply':True, 'msg':''})
