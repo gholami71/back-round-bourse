@@ -7,6 +7,7 @@ import json
 import ast
 import crypto
 from persiantools import characters, digits
+import dateHandler
 
 from flask import render_template
 client = pymongo.MongoClient()
@@ -57,10 +58,28 @@ def CreatePayment(data):
     if db['users'].find_one({'phone':phone}) == None:
         return json.dumps({'replay':False,'msg':'خطا در احراز هویت لطفا مجدد وارد سیستم شوید'})
     print(data)
-    amount = dicPrice[data['level']][str(data['period']['time'])]
+    amount = dicPrice[data['period']['level']][str(data['period']['time'])]
+    if data['code'] != '':
+        code = db['discount'].find_one({'code':data['code']})
+        if code != None:
+            if datetime.datetime.now() < code['date'] and int(code['count'])>int(code['use']):
+                if code['type'] == 'percent':
+                    amount = int((1-(int(code['value'])/100)) * amount)
+                    amount = max(amount , 0)
+                else:
+                    amount = amount - int(code['value'])
+                    amount = max(amount , 0)
+            else:
+                code = ''
+        else:
+            code = ''
+
+
+    if amount == 0:
+        pass
     amount = 1000 # موقت برای توکن تست
     clientRefId = str(random.randint(100000,999999))
-    dic ={'amount':int(amount),"payerIdentity":phone,"clientRefId":clientRefId,'date':datetime.datetime.now(),'period':data['period']['time'],'level':data['level']}
+    dic ={'amount':int(amount),"payerIdentity":phone,"clientRefId":clientRefId,'date':datetime.datetime.now(),'period':data['period']['time'],'level':data['level'],'discount':code}
     data = json.dumps({
         "amount": int(amount),
         "payerIdentity": phone,
@@ -83,11 +102,12 @@ def CreatePayment(data):
 
 def CheckPayment(data):
     phone = crypto.decrypt(data['phu'])
-    if db['users'].find_one({'phone':phone}) == None:
+    user = db['users'].find_one({'phone':phone})
+    if user == None:
         return json.dumps({'reply':False,'msg':'خطا در احراز هویت لطفا مجدد وارد سیستم شوید'})
     try:
         dic = {'label':int(str(data['data']['level']).replace('proplus','2').replace('premium','3').replace('pro','1'))}
-        dic = {'labelName':str(data['data']['level']).replace('proplus','پروپلاس').replace('premium','پریمیوم').replace('pro','پرو')}
+        dic['labelName'] = str(data['data']['level']).replace('proplus','پروپلاس').replace('premium','پریمیوم').replace('pro','پرو')
         dic['period'] = str(data['data']['time']).replace('1','یکماهه').replace('2','دوماهه').replace('3','سه ماهه').replace('6','شش ماهه').replace('12','یکساله ماهه')
         dic['priceBaseInt'] = dicPrice[data['data']['level']][data['data']['time']]
         dic['priceBaseHorof'] = digits.to_word(dicPrice[data['data']['level']][data['data']['time']])
@@ -123,12 +143,28 @@ def CheckPayment(data):
                 dic['codeMsg'] = f'{value} تومان تخفیف اعمال خواهد شد'
                 dic['pricePayInt'] = int(dic['priceBaseInt'] - value)
                 dic['pricePayHorof'] = digits.to_word(dic['pricePayInt'])
-        return json.dumps({'reply':True,'df':dic})
     else:
         dic['pricePayInt'] = dic['priceBaseInt']
         dic['pricePayHorof'] = dic['priceBaseHorof']
         dic['codeMsg'] = ''
         dic['codestatus'] = False
+
+    label = str(user['label']).replace('proplus','2').replace('premium','3').replace('pro','1')
+    if label not in ['1','2','3']: label = '0'
+    label = int(label)
+    level = dic['label']
+    if level not in ['1','2','3',1,2,3]: level = '0'
+    level = int(level)
+    if label>=level:
+        datecredit = max(user['datecredit'],datetime.datetime.now())
+        addenDay = int(data['data']['time'])*31
+        datecredit = datecredit + datetime.timedelta(days=addenDay)
+        dic['resetCredit'] = False
+    else:
+        datecredit = datetime.datetime.now() + datetime.timedelta(days=int(data['data']['time'])*31)
+        dic['resetCredit'] = True
+    dic['credit'] = dateHandler.toJalaliStr(datecredit)
+
     return json.dumps({'reply':True,'df':dic})
 
 
@@ -163,7 +199,7 @@ def VerifyPeyment(code,refid,clientrefid,cardnumber,cardhashpan):
         addenDay = int(peyment['period'])*31
         datecredit = datecredit + datetime.timedelta(days=addenDay)
     else:
-        datecredit = datetime.datetime.now() + datetime.timedelta(days=int(peyment['period'])*30)
+        datecredit = datetime.datetime.now() + datetime.timedelta(days=int(peyment['period'])*31)
     db['users'].update_one({'phone':peyment['payerIdentity']},{'$set':{'label':peyment['level'],'datecredit':datecredit}})
     db['payments'].update_one({'clientRefId':clientrefid},{'$set':{'addenUser':True}})
     dicres = {'status':True,'msg':'تراکنش موفق'}
