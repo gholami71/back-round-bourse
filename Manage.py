@@ -75,7 +75,8 @@ def getDataAllUsers(data):
     # ستون های که شامل تاریخ هستند رو تبدیل  تاریخ جلالی و سپس به رشته تبدیل میکنم برای اینکه بتوان به جیسون تبدیل شود
     for i in ['dateregister','datecredit','lastlogin']:
         if i in df.columns:
-            df[i] = [dateHandler.toJalaliStr(x) for x in df[i]]
+            df[i] = [dateHandler.toJalaliStrOrNan(x) for x in df[i]]
+    df = df.fillna('')
     df = df.to_dict('records')
     return json.dumps({'reply':True, 'df':df})
 

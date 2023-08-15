@@ -11,6 +11,13 @@ def toJalaliStr(date):
     date = str(JalaliDate(date)).replace('-','/')
     return date
 
+def toJalaliStrOrNan(date):
+    try:
+        date = str(JalaliDate(date)).replace('-','/')
+        return date
+    except:
+        return ''
+
 def isWorkDay():
     toDay = toJalaliStr(datetime.datetime.now())
     if db['calendar'].find_one({'holiday':toDay}) == None:

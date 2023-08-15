@@ -100,20 +100,20 @@ while True:
                             getPayamNazer()
                             CheakingProcessPayamNazer = False
                         dilay = 60 - datetime.datetime.now().second
+                        print('داده های دریافت شد کمتر از 60 ثانیه توقف')
                         time.sleep(dilay)
-                        print('Information received. I wait at most "60 seconds"')
                     except:
-                        print('Crash, Sleep 5s')
+                        print('اختلال در دریافت اطلاعات 3 ثانیه توقف')
                         time.sleep(3)
             else:
-                print('I took time, the information has not arrived, we will wait for "60 second" at most')
+                print('دقیقه مناسب دریافت اطلاعات نیست (رند 5 دقیقه) 60 ثانیه توقف')
                 dilay = 60 - datetime.datetime.now().second
                 time.sleep(dilay)
         else:
-            print('The working hours of the market are over. We will wait for "5 minutes" at most')
+            print('ساعت کار بازار نیست 5 دقیقه توقف')
             dilay = 60 - datetime.datetime.now().second
             time.sleep((60*4) + dilay)
     else:
-        print('The market is closed today, we will wait for "1 hour" at most')
+        print('روز کاری بازار نیست 1 ساعت توقف')
         dilay = 60 - datetime.datetime.now().second
         time.sleep((60*59) + dilay)

@@ -73,13 +73,15 @@ def CreatePayment(data):
                 code = ''
         else:
             code = ''
+    else:
+        code = ''
 
 
     if amount == 0:
         pass
     amount = 1000 # موقت برای توکن تست
     clientRefId = str(random.randint(100000,999999))
-    dic ={'amount':int(amount),"payerIdentity":phone,"clientRefId":clientRefId,'date':datetime.datetime.now(),'period':data['period']['time'],'level':data['level'],'discount':code}
+    dic ={'amount':int(amount),"payerIdentity":phone,"clientRefId":clientRefId,'date':datetime.datetime.now(),'period':data['period']['time'],'level':data['period']['level'],'discount':code}
     data = json.dumps({
         "amount": int(amount),
         "payerIdentity": phone,
@@ -108,7 +110,7 @@ def CheckPayment(data):
     try:
         dic = {'label':int(str(data['data']['level']).replace('proplus','2').replace('premium','3').replace('pro','1'))}
         dic['labelName'] = str(data['data']['level']).replace('proplus','پروپلاس').replace('premium','پریمیوم').replace('pro','پرو')
-        dic['period'] = str(data['data']['time']).replace('1','یکماهه').replace('2','دوماهه').replace('3','سه ماهه').replace('6','شش ماهه').replace('12','یکساله ماهه')
+        dic['period'] = str(data['data']['time']).replace('12','یکساله').replace('1','یکماهه').replace('2','دوماهه').replace('3','سه ماهه').replace('6','شش ماهه')
         dic['priceBaseInt'] = dicPrice[data['data']['level']][data['data']['time']]
         dic['priceBaseHorof'] = digits.to_word(dicPrice[data['data']['level']][data['data']['time']])
     except:
@@ -170,6 +172,7 @@ def CheckPayment(data):
 
 def VerifyPeyment(code,refid,clientrefid,cardnumber,cardhashpan):
     peyment = db['payments'].find_one({'clientRefId':clientrefid})
+
     if peyment == None:
         dicres = {'status':False,'msg':'تراکنش یافت نشد'}
         return render_template('returnPayment.html',dicres=dicres)
@@ -181,6 +184,14 @@ def VerifyPeyment(code,refid,clientrefid,cardnumber,cardhashpan):
         except:
             dicres = {'status':False,'msg':'خطای نامشخص لطفا مجدد تلاش کنید یا با پشتیبانی تماس حاصل کنید'}
             return render_template('returnPayment.html',dicres=dicres)
+    
+    if len(peyment['discount'])>0:
+        discount = db['discount'].find_one({'discount':peyment['discount']})
+        if discount == None:
+            dicres = {'status':False,'msg':'کد تخفیف یافت نشد'}
+            return render_template('returnPayment.html',dicres=dicres)
+        use = int(discount['use'])+1
+        db['discount'].update_one({'discount':peyment['discount']},{'$set':{'use':use}})
     data = json.dumps({"refId": str(refid),"amount": int(peyment['amount'])})
     header = {'Content-Type': 'application/json','Authorization': f'Bearer {token}'}
     response = requests.post(url=url+'/v2/pay/verify',data=data,headers=header)

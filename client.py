@@ -200,6 +200,7 @@ def userGetexplor(data):
     user = allow['user']['phone']
     data = data['inp']
 
+    print(data)
     if data['type'] == 'indicator':
         if data['indicator'] == 'rsi':
             df =0

@@ -41,8 +41,18 @@ def GetAlarmsActive():
                     if (len(TseDf)>0):
                         TseDf = TseDf[['فروش - حجم','خرید - حجم','نماد']]
                         dff = dff.set_index('symbol').join(TseDf.set_index('نماد')).reset_index()
-                        dff['compare'] = ((dff['خرید - حجم']==0) + (dff['فروش - حجم']>0) and (dff['method']=='صف فروش شدن')) or ((dff['خرید - حجم']>0) + (dff['فروش - حجم']==0) and (dff['method']=='صف خرید شدن')) or ((dff['خرید - حجم']>0) and (dff['method']=='جمع شدن صف فروش')) or ((dff['فروش - حجم']>0) and (dff['method']=='ریختن صف خرید'))
-                        dff = dff[dff['compare']==True]
+                        dff['EmpityBuy'] = (dff['خرید - حجم']==0)*1
+                        dff['EmpitySel'] = (dff['فروش - حجم']==0)*1
+                        dff['AvlibaleBuy'] = (dff['خرید - حجم']>0)*1
+                        dff['AvlibaleSel'] = (dff['فروش - حجم']>0)*1
+                        dff['SafBuy'] = (dff['EmpityBuy'] > dff['EmpitySel'])*1
+                        dff['SafSel'] = (dff['EmpityBuy'] < dff['EmpitySel'])*1
+                        dff['ConSafSel'] = ((dff['method']=='صف فروش شدن')*1) * dff['SafSel'] 
+                        dff['ConSafBuy'] = ((dff['method']=='صف خرید شدن')*1) * dff['SafBuy'] 
+                        dff['ConSafNotBuy'] = ((dff['method']=='ریختن صف خرید')*1) * dff['AvlibaleSel']
+                        dff['ConSafNotSel'] = ((dff['method']=='جمع شدن صف فروش')*1) * dff['AvlibaleBuy']
+                        dff['compare'] = dff['ConSafSel'] + dff['ConSafBuy'] + dff['ConSafNotBuy'] + dff['ConSafNotSel']
+                        dff = dff[dff['compare']>0]
                         dff['textMsg'] = [[symbol, str(AlarmtType) + ' ('+str(method)+')'] for symbol,AlarmtType, method in zip(df['symbol'],df['AlarmtType'], df['method'])]
                         listTargetId = dff['_id'].to_list()
                         for x in dff.index:
@@ -85,7 +95,6 @@ while True:
                         print('شروط بررسی شد یک دقیقه توقف"')
                         time.sleep(dilay)
                     except:
-
                         print('بررسی شروط با خطا مواجه شد 3 ثانیه توقف')
                         time.sleep(3)
             else:
