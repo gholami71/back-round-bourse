@@ -159,6 +159,11 @@ def userGetexplor():
     data = request.get_json()
     return client.userGetexplor(data)
 
+@app.route('/user/getcondition', methods=['POST'])
+def userGetCondition():
+    data = request.get_json()
+    return client.userGetCondition(data)
+
 @app.route('/user/setcondition', methods=['POST'])
 def setcondition():
     data = request.get_json()

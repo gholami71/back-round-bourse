@@ -212,11 +212,31 @@ def userGetexplor(data):
     return json.dumps({'reply':False})
 
 
-def setcondition(data):
-    phu = crypto.decrypt(data['phu']) 
-    if(db['users'].find_one({'phone':phu}) == None):
-        return json.dumps({'reply':False})
+def setcondition(data):  
+    credit = AllowExplor(data)
+    if credit['reply'] == False:
+        return json.dumps(credit)
+ 
+    label_user = credit['user']['label']
+    count_condition = db['conditions'].count_documents({'phone':credit['user']['phone']})
+    label = {'pro':1,'proplus':3, 'premium':9}  
+    print(count_condition)
+    if label[label_user] <= count_condition:
+        return json.dumps({'reply':False,'msg': f'حداکثر شروط برای حساب کاربری شما  {label[label_user]} میباشد.' })
     dic = data['data']
-    dic['phone'] = str(phu)
+    dic['phone'] = str(credit['user']['phone'])
+    if db['conditions'].find_one(dic) != None:
+        return json.dumps({'reply':False, 'msg':'شرط تکراری است'})
     db['conditions'].insert_one(dic)
     return json.dumps({'reply':True})
+
+
+def userGetCondition(data):
+    user = AllowExplor(data)
+    if user['reply'] == False:
+        return json.dumps(user)
+    conditions = db['conditions'].find({'phone':user['user']['phone']},{'_id':0})
+    conditions = [x for x in conditions]
+    return json.dumps({'reply':True, 'conditions':conditions})
+    
+
