@@ -7,6 +7,7 @@ import pandas as pd
 import dateHandler
 from bson import ObjectId
 import sms
+import analysis
 
 client = pymongo.MongoClient()
 db = client['RoundBourse']
@@ -18,7 +19,6 @@ def AllowExplor(data):
         user = crypto.decrypt(data['phu'])
     except:
         return {'reply':False,'msg':'ورود با مشکل مواجه شده است لطفا مجددا وارد شوید'}
-    print(user)
     user = db['users'].find_one({'phone':str(user)})
     if user['datecredit']<datetime.datetime.now():
         return {'reply':False,'msg':'اشتراک شما پایان یافته'}
@@ -193,11 +193,106 @@ def userGetexplor(data):
     if allow['reply'] == False:
         return json.dumps(allow)
     user = allow['user']['phone']
-    data = data['inp']
-    print(data)
-    if data['type'] == 'indicator':
-        if data['indicator'] == 'rsi':
-            df =0
+    condition = db['conditions'].find({'phone':user},{'_id':0,'phone':0})
+    symbols = db['tse'].distinct('نماد')
+    dfs = []
+    for i in condition:
+        if i['type']=='indicator':
+            if i['indicator']=='rsi':
+                if i['position']=='greater':
+                    df = analysis.get_rsi_df_tse(symbols,1)
+                    df['con'] = df['RSI']>int(i['value'])
+                if i['position']=='less':
+                    df = analysis.get_rsi_df_tse(symbols,1)
+                    df['con'] = df['RSI']<int(i['value'])
+                if i['position']=='cross':
+                    df = analysis.get_rsi_df_tse(symbols,int(i['lastday']))
+                    df['con'] = df['RSI']<int(i['value'])
+                    con = df.groupby('نماد')['con'].nunique() > 1
+                    df = df.set_index('نماد').drop(columns='con').join(con).reset_index()
+                df = df[df['con']==True]
+                df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
+                if len(df) == 0:
+                    return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
+                else:
+                    symbols = df['نماد'].to_list()
+                    dfs.append(df)
+
+
+            if i['indicator']=='sma':
+                if i['position']=='greater':
+                    df = analysis.get_sma_df_tse(symbols,int(i['length']))
+                    df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
+                    df['con'] = df['SMA']>df['قیمت']
+                if i['position']=='less':
+                    df = analysis.get_sma_df_tse(symbols,int(i['length']))
+                    df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
+                    df['con'] = df['SMA']<df['قیمت']
+                if i['position']=='cross':
+                    df = analysis.get_sma_df_tse(symbols,int(i['length'])+int(i['lastday']))
+                    df['con'] = df['SMA']<df['قیمت']
+                    con = df.groupby('نماد')['con'].nunique() > 1
+                    df = df.set_index('نماد').drop(columns='con').join(con).reset_index()
+                df = df[df['con']==True]
+                df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
+                if len(df) == 0:
+                    return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
+                else:
+                    symbols = df['نماد'].to_list()
+                    dfs.append(df)
+
+            if i['indicator']=='ema':
+                if i['position']=='greater':
+                    df = analysis.get_ema_df_tse(symbols,int(i['length']))
+                    df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
+                    df['con'] = df['EMA']>df['قیمت']
+                if i['position']=='less':
+                    df = analysis.get_ema_df_tse(symbols,int(i['length']))
+                    df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
+                    df['con'] = df['EMA']<df['قیمت']
+                if i['position']=='cross':
+                    df = analysis.get_ema_df_tse(symbols,int(i['length'])+int(i['lastday']))
+                    df['con'] = df['EMA']<df['قیمت']
+                    con = df.groupby('نماد')['con'].nunique() > 1
+                    df = df.set_index('نماد').drop(columns='con').join(con).reset_index()
+                df = df[df['con']==True]
+                df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
+                if len(df) == 0:
+                    return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
+                else:
+                    symbols = df['نماد'].to_list()
+                    dfs.append(df)
+
+            if i['indicator']=='wma':
+                if i['position']=='greater':
+                    df = analysis.get_wma_df_tse(symbols,int(i['length']))
+                    df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
+                    df['con'] = df['WMA']>df['قیمت']
+                if i['position']=='less':
+                    df = analysis.get_wma_df_tse(symbols,int(i['length']))
+                    df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
+                    df['con'] = df['WMA']<df['قیمت']
+                if i['position']=='cross':
+                    df = analysis.get_wma_df_tse(symbols,int(i['length'])+int(i['lastday']))
+                    df['con'] = df['WMA']<df['قیمت']
+                    con = df.groupby('نماد')['con'].nunique() > 1
+                    df = df.set_index('نماد').drop(columns='con').join(con).reset_index()
+                df = df[df['con']==True]
+                df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
+                print(df)
+                if len(df) == 0:
+                    return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
+                else:
+                    symbols = df['نماد'].to_list()
+                    dfs.append(df)
+
+                #df = df.drop_duplicates(subset=['نماد'],keep='last')
+                #df = df.dropna()
+                #df = df[df['con']==True]
+
+        print(i)
+
+
     return json.dumps({'reply':False})
 
 
@@ -209,7 +304,6 @@ def setcondition(data):
     label_user = credit['user']['label']
     count_condition = db['conditions'].count_documents({'phone':credit['user']['phone']})
     label = {'pro':1,'proplus':3, 'premium':9}  
-    print(count_condition)
     if label[label_user] <= count_condition:
         return json.dumps({'reply':False,'msg': f'حداکثر شروط برای حساب کاربری شما  {label[label_user]} میباشد.' })
     dic = data['data']
@@ -236,7 +330,6 @@ def delcondition(data):
     phu = crypto.decrypt(data['phu']) 
     if(db['users'].find_one({'phone':phu}) == None):
         return json.dumps({'reply':False,'msg':'خطاشناسایی کاربر لطفا مجددا وارد شوید'})
-    print(data)
     db['conditions'].delete_many({'phone':phu,'_id':ObjectId(data['id'])})
     return json.dumps({'reply':True})
 
