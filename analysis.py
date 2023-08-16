@@ -16,14 +16,12 @@ def getDfTse(lenght):
         {"$group": {"_id": "$نماد", "docs": {"$addToSet": "$$ROOT"}}},
         {"$project": {"_id": 1, "top": {"$slice": ["$docs", lenght]}}}
     ]
-
     # اجرای aggregate بر روی کالکشن
     results = list(db['tse'].aggregate(pipeline))
     data = []
     for item in results:
         for doc in item['top']:
             data.append(doc)
-
     df = pd.DataFrame(data)
     df = df.sort_values(by='timestump')
     return df

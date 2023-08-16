@@ -159,6 +159,11 @@ def userGetexplor():
     data = request.get_json()
     return client.userGetexplor(data)
 
+@app.route('/user/setcondition', methods=['POST'])
+def setcondition():
+    data = request.get_json()
+    return client.setcondition(data)
+
 
 @app.route('/payment/create', methods=['POST'])
 def CreatePayment():
@@ -170,6 +175,8 @@ def CreatePayment():
 def CheckPayment():
     data = request.get_json()
     return payment.CheckPayment(data)
+
+
 
 @app.route('/payment/verify', methods=['POST','GET'])
 def VerifyPayment():

@@ -210,3 +210,13 @@ def userGetexplor(data):
     print(data)
 
     return json.dumps({'reply':False})
+
+
+def setcondition(data):
+    phu = crypto.decrypt(data['phu']) 
+    if(db['users'].find_one({'phone':phu}) == None):
+        return json.dumps({'reply':False})
+    dic = data['data']
+    dic['phone'] = str(phu)
+    db['conditions'].insert_one(dic)
+    return json.dumps({'reply':True})
