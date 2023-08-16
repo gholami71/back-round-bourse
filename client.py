@@ -188,35 +188,46 @@ def userEditAlarm(data):
     return json.dumps({'reply':True})
 
 
-    
-
-
-        
-
 def userGetexplor(data):
     allow = AllowExplor(data)
     if allow['reply'] == False:
         return json.dumps(allow)
     user = allow['user']['phone']
     data = data['inp']
-
     print(data)
     if data['type'] == 'indicator':
         if data['indicator'] == 'rsi':
             df =0
-
-
-
-    print(data)
-
     return json.dumps({'reply':False})
 
 
 def setcondition(data):
     phu = crypto.decrypt(data['phu']) 
     if(db['users'].find_one({'phone':phu}) == None):
-        return json.dumps({'reply':False})
+        return json.dumps({'reply':False,'msg':'خطاشناسایی کاربر لطفا مجددا وارد شوید'})
     dic = data['data']
     dic['phone'] = str(phu)
     db['conditions'].insert_one(dic)
+    return json.dumps({'reply':True})
+
+
+
+def getcondition(data):
+    phu = crypto.decrypt(data['phu']) 
+    if(db['users'].find_one({'phone':phu}) == None):
+        return json.dumps({'reply':False,'msg':'خطاشناسایی کاربر لطفا مجددا وارد شوید'})
+    df = pd.DataFrame(db['conditions'].find({'phone':phu}))
+    if len(df)==0:
+        return json.dumps({'reply':True,'df':[]})
+    df['_id'] = df['_id'].apply(str)
+    df = df.to_dict('records')
+    return json.dumps({'reply':True,'df':df})
+
+
+def delcondition(data):
+    phu = crypto.decrypt(data['phu']) 
+    if(db['users'].find_one({'phone':phu}) == None):
+        return json.dumps({'reply':False,'msg':'خطاشناسایی کاربر لطفا مجددا وارد شوید'})
+    print(data)
+    db['conditions'].delete_many({'phone':phu,'_id':ObjectId(data['id'])})
     return json.dumps({'reply':True})

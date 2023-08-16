@@ -164,6 +164,16 @@ def setcondition():
     data = request.get_json()
     return client.setcondition(data)
 
+@app.route('/user/getcondition', methods=['POST'])
+def getcondition():
+    data = request.get_json()
+    return client.getcondition(data)
+
+@app.route('/user/delcondition', methods=['POST'])
+def delcondition():
+    data = request.get_json()
+    return client.delcondition(data)
+
 
 @app.route('/payment/create', methods=['POST'])
 def CreatePayment():
