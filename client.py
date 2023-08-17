@@ -330,13 +330,43 @@ def userGetexplor(data):
         if i['type']=='candlestick':
 
             df = analysis.get_candle_df_tse(symbols,int(i['lastday']))
+
             if i['candlestick'] == 'bullish':
-                print(df)
                 df['bullish'] = (df['body'] > 2) & (df['top'] < 0.3) & (df['bot'] < 0.3)
                 df = df[df['bullish']==True]
-            df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
+                if len(df) == 0:
+                    return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
+                else:
+                    df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
+                    df['bullish'] = df['dataInt']
+                    df = df[['نماد','bullish']]
+                    symbols = df['نماد'].to_list()
+                    dfs.append(df)
 
-            print(df)
+            if i['candlestick'] == 'bearish':
+                df['bearish'] = (df['body'] < 2) & (df['top'] < 0.3) & (df['bot'] < 0.3)
+                df = df[df['bearish']==True]
+                if len(df) == 0:
+                    return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
+                else:
+                    df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
+                    df['bearish'] = df['dataInt']
+                    df = df[['نماد','bearish']]
+                    symbols = df['نماد'].to_list()
+                    dfs.append(df)
+
+            if i['candlestick'] == 'hummer':
+                df['hummer'] = (df['bot'] > (df['body_abs'] *2)) & (df['top'] < df['body_abs'])
+                df = df[df['hummer']==True]
+                if len(df) == 0:
+                    return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
+                else:
+                    df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
+                    df['hummer'] = df['dataInt']
+                    df = df[['نماد','hummer']]
+                    symbols = df['نماد'].to_list()
+                    dfs.append(df)
+                    print(df)
 
 
 
