@@ -14,7 +14,7 @@ def getDfTse(symbol_list, lenght):
         {"$project": {"_id": 1, "top": {"$slice": ["$docs", lenght]}}}
     ]
     # اجرای aggregate بر روی کالکشن
-    results = list(db['tse'].aggregate(pipeline))
+    results = list(db['tse'].aggregate(pipeline,allowDiskUse=True))
     data = []
     for item in results:
         for doc in item['top']:
@@ -26,6 +26,10 @@ def getDfTse(symbol_list, lenght):
 
 def apply_rsi(group):
     group['RSI'] = ta.rsi(group['آخرین معامله - مقدار'], length=4)
+    return group
+
+def apply_cci(group):
+    group['CCI'] = ta.cci(high=group['بیشترین'], low=group['کمترین'], close=group['آخرین معامله - مقدار'], length=5)
     return group
 
 def apply_sma(group, window_size):
@@ -40,11 +44,24 @@ def apply_wma(group, window_size):
     group['WMA'] = (group['آخرین معامله - مقدار'] * group['حجم']).rolling(window=window_size, min_periods=1).sum() / group['حجم'].rolling(window=window_size, min_periods=1).sum()
     return group
 
+def apply_supertrend(group, length):
+    group['SuperTrend'] = ta.supertrend(high=group['بیشترین'], low=group['کمترین'], close=group['آخرین معامله - مقدار'], length=length, multiplier=3)
+    return group
+
+
 def get_rsi_df_tse(symbol_list,last_day):
     df = getDfTse(symbol_list,24)
     df = df.drop_duplicates(subset=['نماد','dataInt'],keep='last')
     df = df.groupby('نماد',group_keys=False).apply(apply_rsi)
     df = df[['dataInt','RSI','نماد']]
+    df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(last_day, 'dataInt'))
+    return df
+
+def get_cci_df_tse(symbol_list,last_day):
+    df = getDfTse(symbol_list,6)
+    df = df.drop_duplicates(subset=['نماد','dataInt'],keep='last')
+    df = df.groupby('نماد',group_keys=False).apply(apply_cci)
+    df = df[['dataInt','CCI','نماد']]
     df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(last_day, 'dataInt'))
     return df
 
@@ -74,3 +91,26 @@ def get_wma_df_tse(symbol_list,last_day):
     df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(last_day, 'dataInt'))
     df = df.rename(columns={'آخرین معامله - مقدار':'قیمت'})
     return df
+
+def get_supertrand_df_tse(symbol_list,last_day):
+    df = getDfTse(symbol_list,last_day*2)
+    df = df.drop_duplicates(subset=['نماد','dataInt'],keep='last')
+    df = df.groupby('نماد',group_keys=False).apply(apply_supertrend,length=last_day)
+    df = df[['dataInt','SuperTrend','نماد','آخرین معامله - مقدار']]
+    df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(last_day, 'dataInt'))
+    df = df.rename(columns={'آخرین معامله - مقدار':'قیمت'})
+    return df
+
+def get_candle_df_tse(symbol_list,last_day):
+    df = getDfTse(symbol_list,last_day)
+    df = df.drop_duplicates(subset=['نماد','dataInt'],keep='last')
+    df['body'] = ((df['آخرین معامله - مقدار'] / df['اولین']) - 1)*100
+    df['body_abs'] = df['body'].apply(abs)
+    df['top'] = df.apply(lambda row: row['اولین'] if row['اولین'] > row['آخرین معامله - مقدار'] else row['آخرین معامله - مقدار'], axis=1)
+    df['top'] = ((df['بیشترین'] / df['top']) - 1)*100
+    df['bot'] = df.apply(lambda row: row['اولین'] if row['اولین'] < row['آخرین معامله - مقدار'] else row['آخرین معامله - مقدار'], axis=1)
+    df['bot'] = ((df['bot'] / df['کمترین']) - 1)*100
+    df = df[['body','body_abs','top','bot','نماد','dataInt']]
+    return df
+
+

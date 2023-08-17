@@ -218,6 +218,25 @@ def userGetexplor(data):
                     symbols = df['نماد'].to_list()
                     dfs.append(df)
 
+            if i['indicator']=='cci':
+                if i['position']=='greater':
+                    df = analysis.get_cci_df_tse(symbols,1)
+                    df['con'] = df['CCI']>int(i['value'])
+                if i['position']=='less':
+                    df = analysis.get_cci_df_tse(symbols,1)
+                    df['con'] = df['CCI']<int(i['value'])
+                if i['position']=='cross':
+                    df = analysis.get_cci_df_tse(symbols,int(i['lastday']))
+                    df['con'] = df['CCI']<int(i['value'])
+                    con = df.groupby('نماد')['con'].nunique() > 1
+                    df = df.set_index('نماد').drop(columns='con').join(con).reset_index()
+                df = df[df['con']==True]
+                df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
+                if len(df) == 0:
+                    return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
+                else:
+                    symbols = df['نماد'].to_list()
+                    dfs.append(df)
 
             if i['indicator']=='sma':
                 if i['position']=='greater':
@@ -279,16 +298,47 @@ def userGetexplor(data):
                     df = df.set_index('نماد').drop(columns='con').join(con).reset_index()
                 df = df[df['con']==True]
                 df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
-                print(df)
                 if len(df) == 0:
                     return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
                 else:
                     symbols = df['نماد'].to_list()
                     dfs.append(df)
 
-                #df = df.drop_duplicates(subset=['نماد'],keep='last')
-                #df = df.dropna()
-                #df = df[df['con']==True]
+            if i['indicator']=='supertrend':
+                if i['position']=='greater':
+                    df = analysis.get_supertrand_df_tse(symbols,int(i['length']))
+                    df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
+                    df['con'] = df['SuperTrend']>df['قیمت']
+                if i['position']=='less':
+                    df = analysis.get_supertrand_df_tse(symbols,int(i['length']))
+                    df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
+                    df['con'] = df['SuperTrend']<df['قیمت']
+                if i['position']=='cross':
+                    df = analysis.get_supertrand_df_tse(symbols,int(i['length'])+int(i['lastday']))
+                    df['con'] = df['SuperTrend']<df['قیمت']
+                    con = df.groupby('نماد')['con'].nunique() > 1
+                    df = df.set_index('نماد').drop(columns='con').join(con).reset_index()
+                df = df[df['con']==True]
+                df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
+                if len(df) == 0:
+                    return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
+                else:
+                    symbols = df['نماد'].to_list()
+                    dfs.append(df)
+
+
+        if i['type']=='candlestick':
+
+            df = analysis.get_candle_df_tse(symbols,int(i['lastday']))
+            if i['candlestick'] == 'bullish':
+                print(df)
+                df['bullish'] = (df['body'] > 2) & (df['top'] < 0.3) & (df['bot'] < 0.3)
+                df = df[df['bullish']==True]
+            df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
+
+            print(df)
+
+
 
         print(i)
 
