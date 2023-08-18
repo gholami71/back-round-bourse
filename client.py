@@ -216,6 +216,7 @@ def userGetexplor(data):
                     return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
                 else:
                     symbols = df['نماد'].to_list()
+                    df = df[['RSI','نماد']]
                     dfs.append(df)
 
             if i['indicator']=='cci':
@@ -236,6 +237,7 @@ def userGetexplor(data):
                     return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
                 else:
                     symbols = df['نماد'].to_list()
+                    df = df[['CCI','نماد']]
                     dfs.append(df)
 
             if i['indicator']=='sma':
@@ -258,6 +260,8 @@ def userGetexplor(data):
                     return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
                 else:
                     symbols = df['نماد'].to_list()
+                    df = df[['SMA','نماد']]
+                    df = df.rename(columns={'SMA':'SMA '+str(i['length'])})
                     dfs.append(df)
 
             if i['indicator']=='ema':
@@ -280,6 +284,8 @@ def userGetexplor(data):
                     return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
                 else:
                     symbols = df['نماد'].to_list()
+                    df = df[['EMA','نماد']]
+                    df = df.rename(columns={'EMA':'EMA '+str(i['length'])})
                     dfs.append(df)
 
             if i['indicator']=='wma':
@@ -302,6 +308,9 @@ def userGetexplor(data):
                     return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
                 else:
                     symbols = df['نماد'].to_list()
+                    df = df[['WMA','نماد']]
+                    df = df.rename(columns={'WMA':'WMA '+str(i['length'])})
+
                     dfs.append(df)
 
             if i['indicator']=='supertrend':
@@ -324,11 +333,12 @@ def userGetexplor(data):
                     return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
                 else:
                     symbols = df['نماد'].to_list()
+                    df = df[['SuperTrend','نماد']]
+                    df = df.rename(columns={'SuperTrend':'SuperTrend '+str(i['length'])})
                     dfs.append(df)
 
 
         if i['type']=='candlestick':
-
             df = analysis.get_candle_df_tse(symbols,int(i['lastday']))
 
             if i['candlestick'] == 'bullish':
@@ -366,13 +376,104 @@ def userGetexplor(data):
                     df = df[['نماد','hummer']]
                     symbols = df['نماد'].to_list()
                     dfs.append(df)
-                    print(df)
 
+            if i['candlestick'] == 'invertedhammer':
+                df['invertedhammer'] = (df['top'] > (df['body_abs'] *2)) & (df['bot'] < df['body_abs'])
+                df = df[df['invertedhammer']==True]
+                if len(df) == 0:
+                    return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
+                else:
+                    df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
+                    df['invertedhammer'] = df['dataInt']
+                    df = df[['نماد','invertedhammer']]
+                    symbols = df['نماد'].to_list()
+                    dfs.append(df)
 
+            if i['candlestick'] == 'gravestondoji':
+                df['gravestondoji'] = (df['top'] > (df['body_abs'] *4)) & ((df['bot']*2) < df['top'])
+                df = df[df['gravestondoji']==True]
+                if len(df) == 0:
+                    return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
+                else:
+                    df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
+                    df['gravestondoji'] = df['dataInt']
+                    df = df[['نماد','gravestondoji']]
+                    symbols = df['نماد'].to_list()
+                    dfs.append(df)
 
-        print(i)
+            if i['candlestick'] == 'longleggeddoji':
+                df['longleggeddoji'] = (df['bot'] > (df['body_abs'] *4)) & ((df['top']*2) < df['bot'])
+                df = df[df['longleggeddoji']==True]
+                if len(df) == 0:
+                    return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
+                else:
+                    df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
+                    df['longleggeddoji'] = df['dataInt']
+                    df = df[['نماد','longleggeddoji']]
+                    symbols = df['نماد'].to_list()
+                    dfs.append(df)
 
+            if i['candlestick'] == 'dragonflydoji':
+                df['dragonflydoji'] = (df['bot'] > (df['body_abs'] *4)) & (df['bot'] > (df['body_abs'] *4))
+                df = df[df['dragonflydoji']==True]
+                if len(df) == 0:
+                    return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
+                else:
+                    df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
+                    df['dragonflydoji'] = df['dataInt']
+                    df = df[['نماد','dragonflydoji']]
+                    symbols = df['نماد'].to_list()
+                    dfs.append(df)
 
+            if i['candlestick'] == 'star':
+                df['star'] = (df['bot'] > (df['body_abs'] *4)) & (df['bot'] > (df['body_abs'] *4)) & (df['body_abs'] < 1.5)
+                df = df[df['star']==True]
+                if len(df) == 0:
+                    return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
+                else:
+                    df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
+                    df['star'] = df['dataInt']
+                    df = df[['نماد','star']]
+                    symbols = df['نماد'].to_list()
+                    dfs.append(df)
+
+        if i['type']=='supportresistance':
+            if i['supportresistance'] == 'support':
+                df = analysis.get_support_df_tse(symbols)
+                df = df[df['distance']<=int(i['distance'])]
+                if len(df) == 0:
+                    return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
+                df = df[df['distance']>-3]
+                if len(df) == 0:
+                    return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
+                df = df[['نماد','support']]
+                symbols = df['نماد'].to_list()
+                dfs.append(df)
+
+            if i['supportresistance'] == 'resistance':
+                df = analysis.get_resistance_df_tse(symbols)
+                df = df[df['distance']<=int(i['distance'])]
+                if len(df) == 0:
+                    return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
+                df = df[df['distance']>-3]
+                if len(df) == 0:
+                    return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
+                df = df[['نماد','resistance']]
+                symbols = df['نماد'].to_list()
+                dfs.append(df)
+
+    dff = None
+    for i in dfs:
+        if dff is None:
+            dff = i
+        else:
+            dff = dff.merge(i,on=['نماد'])
+    
+    if len(dff) == 0:
+        return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
+    
+    print(dff)
+    
     return json.dumps({'reply':False})
 
 

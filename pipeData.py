@@ -28,6 +28,7 @@ def setTseToDb():
     print('start',now)
     df['time'] = str(now.hour) +':'+str(now.minute)+':'+str(now.second)
     df = df.to_dict('records')
+    db['tse'].delete_many({'dataInt':dateHandler.toDayJalaliInt()})
     db['tse'].insert_many(df)
 
 
