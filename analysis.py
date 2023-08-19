@@ -51,14 +51,17 @@ def apply_cci(group):
 
 def apply_sma(group, window_size):
     group['SMA'] = group['آخرین معامله - مقدار'].rolling(window=window_size, min_periods=1).mean()
+    group['SMA'] = group['SMA'].apply(round)
     return group
 
 def apply_ema(group, window_size):
     group['EMA'] = ta.ema(group['آخرین معامله - مقدار'], length=window_size)
+    group['EMA'] = group['EMA'].apply(round)
     return group
 
 def apply_wma(group, window_size):
     group['WMA'] = (group['آخرین معامله - مقدار'] * group['حجم']).rolling(window=window_size, min_periods=1).sum() / group['حجم'].rolling(window=window_size, min_periods=1).sum()
+    group['WMA'] = group['WMA'].apply(round)
     return group
 
 def apply_supertrend(group, length):

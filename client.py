@@ -14,6 +14,8 @@ db = client['RoundBourse']
 
 limit = {'alarms':{'pro':10, 'proplus':20, 'premium':40}}
 
+
+
 def AllowExplor(data):
     try:
         user = crypto.decrypt(data['phu'])
@@ -351,6 +353,7 @@ def userGetexplor(data):
                     df['bullish'] = df['dataInt']
                     df = df[['نماد','bullish']]
                     symbols = df['نماد'].to_list()
+                    df = df.rename(columns={'bullish':'کندل صعودی'})
                     dfs.append(df)
 
             if i['candlestick'] == 'bearish':
@@ -363,6 +366,7 @@ def userGetexplor(data):
                     df['bearish'] = df['dataInt']
                     df = df[['نماد','bearish']]
                     symbols = df['نماد'].to_list()
+                    df = df.rename(columns={'bearish':'کندل نزولی'})
                     dfs.append(df)
 
             if i['candlestick'] == 'hummer':
@@ -375,6 +379,7 @@ def userGetexplor(data):
                     df['hummer'] = df['dataInt']
                     df = df[['نماد','hummer']]
                     symbols = df['نماد'].to_list()
+                    df = df.rename(columns={'hummer':'کندل چکش'})
                     dfs.append(df)
 
             if i['candlestick'] == 'invertedhammer':
@@ -387,6 +392,7 @@ def userGetexplor(data):
                     df['invertedhammer'] = df['dataInt']
                     df = df[['نماد','invertedhammer']]
                     symbols = df['نماد'].to_list()
+                    df = df.rename(columns={'invertedhammer':'کندل چکش معکوس'})
                     dfs.append(df)
 
             if i['candlestick'] == 'gravestondoji':
@@ -399,6 +405,7 @@ def userGetexplor(data):
                     df['gravestondoji'] = df['dataInt']
                     df = df[['نماد','gravestondoji']]
                     symbols = df['نماد'].to_list()
+                    df = df.rename(columns={'gravestondoji':'کندل سنگ قبر'})
                     dfs.append(df)
 
             if i['candlestick'] == 'longleggeddoji':
@@ -411,6 +418,7 @@ def userGetexplor(data):
                     df['longleggeddoji'] = df['dataInt']
                     df = df[['نماد','longleggeddoji']]
                     symbols = df['نماد'].to_list()
+                    df = df.rename(columns={'longleggeddoji':'کندل پا بلند'})
                     dfs.append(df)
 
             if i['candlestick'] == 'dragonflydoji':
@@ -423,6 +431,7 @@ def userGetexplor(data):
                     df['dragonflydoji'] = df['dataInt']
                     df = df[['نماد','dragonflydoji']]
                     symbols = df['نماد'].to_list()
+                    df = df.rename(columns={'dragonflydoji':'کندل سنجاقک'})
                     dfs.append(df)
 
             if i['candlestick'] == 'star':
@@ -435,6 +444,7 @@ def userGetexplor(data):
                     df['star'] = df['dataInt']
                     df = df[['نماد','star']]
                     symbols = df['نماد'].to_list()
+                    df = df.rename(columns={'star':'کندل ستاره'})
                     dfs.append(df)
 
         if i['type']=='supportresistance':
@@ -448,6 +458,7 @@ def userGetexplor(data):
                     return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
                 df = df[['نماد','support']]
                 symbols = df['نماد'].to_list()
+                df = df.rename(columns={'support':'حمایت'})
                 dfs.append(df)
 
             if i['supportresistance'] == 'resistance':
@@ -460,6 +471,7 @@ def userGetexplor(data):
                     return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
                 df = df[['نماد','resistance']]
                 symbols = df['نماد'].to_list()
+                df = df.rename(columns={'resistance':'مقاومت'})
                 dfs.append(df)
 
     dff = None
@@ -471,10 +483,10 @@ def userGetexplor(data):
     
     if len(dff) == 0:
         return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
+
+    dff = dff.to_dict('records')
     
-    print(dff)
-    
-    return json.dumps({'reply':False})
+    return json.dumps({'reply':True,'df':dff})
 
 
 def setcondition(data):  
