@@ -225,6 +225,8 @@ def get_support_df_tse(symbol_list):
     df['support'] = df['support'].apply(int)
     return df
 
+
+
 def get_resistance_df_tse(symbol_list):
     df = getDfTse(symbol_list,365)
     df = df.drop_duplicates(subset=['نماد','dataInt'],keep='last')

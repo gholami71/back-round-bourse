@@ -493,7 +493,6 @@ def setcondition(data):
     credit = AllowExplor(data)
     if credit['reply'] == False:
         return json.dumps(credit)
- 
     label_user = credit['user']['label']
     count_condition = db['conditions'].count_documents({'phone':credit['user']['phone']})
     label = {'pro':1,'proplus':3, 'premium':9}  
