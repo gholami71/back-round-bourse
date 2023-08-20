@@ -77,19 +77,21 @@ def apply_support(group):
         group = group[group['dataInt']==group['dataInt'].max()]
         group['support'] = 0
         return group
+    
     group['normalPrice'] = (group['قیمت پایانی - مقدار'] - group['قیمت پایانی - مقدار'].min()) / (group['قیمت پایانی - مقدار'].max() - group['قیمت پایانی - مقدار'].min())
     group['minPrice'] = group['قیمت پایانی - مقدار'].rolling(window=5,center=True,min_periods=1).min()
     group['minNormal'] = group['normalPrice'].rolling(window=5,center=True,min_periods=1).min()
-    df = group.dropna()
-    if len(df)<10:
+    if len(group)<10:
         group = group[group['dataInt']==group['dataInt'].max()]
         group = group.drop(columns=['normalPrice','minPrice','minNormal'])
         group['support'] = 0
         return group
+    group['minNormal']=group['minNormal'].fillna(0)
     group['minNormal'] = group['minNormal'].apply(apply_To100Int)
     group['count'] = group.groupby('minNormal')['minNormal'].transform('count')
     latest_price = group[group['dataInt'] == group['dataInt'].max()]['قیمت پایانی - مقدار'].values[0]
     df = group[group['minPrice']<=latest_price]
+    print(len(df))
     if len(df) == 0: 
         group = group[group['dataInt']==group['dataInt'].max()]
         group = group.drop(columns=['normalPrice','minPrice','minNormal','count'])
