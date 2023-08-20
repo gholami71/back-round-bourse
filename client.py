@@ -201,17 +201,21 @@ def userGetexplor(data):
     for i in condition:
         if i['type']=='indicator':
             if i['indicator']=='rsi':
+
                 if i['position']=='greater':
                     df = analysis.get_rsi_df_tse(symbols,1)
                     df['con'] = df['RSI']>int(i['value'])
+
                 if i['position']=='less':
                     df = analysis.get_rsi_df_tse(symbols,1)
                     df['con'] = df['RSI']<int(i['value'])
+
                 if i['position']=='cross':
                     df = analysis.get_rsi_df_tse(symbols,int(i['lastday']))
                     df['con'] = df['RSI']<int(i['value'])
                     con = df.groupby('نماد')['con'].nunique() > 1
                     df = df.set_index('نماد').drop(columns='con').join(con).reset_index()
+
                 df = df[df['con']==True]
                 df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
                 if len(df) == 0:
@@ -312,7 +316,6 @@ def userGetexplor(data):
                     symbols = df['نماد'].to_list()
                     df = df[['WMA','نماد']]
                     df = df.rename(columns={'WMA':'WMA '+str(i['length'])})
-
                     dfs.append(df)
 
             if i['indicator']=='supertrend':
@@ -357,7 +360,7 @@ def userGetexplor(data):
                     dfs.append(df)
 
             if i['candlestick'] == 'bearish':
-                df['bearish'] = (df['body'] < 2) & (df['top'] < 0.3) & (df['bot'] < 0.3)
+                df['bearish'] = (df['body'] < -2) & (df['top'] < 0.3) & (df['bot'] < 0.3)
                 df = df[df['bearish']==True]
                 if len(df) == 0:
                     return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
@@ -448,6 +451,7 @@ def userGetexplor(data):
                     dfs.append(df)
 
         if i['type']=='supportresistance':
+            
             if i['supportresistance'] == 'support':
                 df = analysis.get_support_df_tse(symbols)
                 df = df[df['distance']<=int(i['distance'])]

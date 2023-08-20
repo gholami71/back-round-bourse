@@ -25,7 +25,7 @@ db = client['RoundBourse']
 
 def getDfTse(symbol_list, length):
     pipeline = [
-        {"$match": {"نماد": {"$in": symbol_list}, "dataInt": {"$gt": 10}}},
+        {"$match": {"نماد": {"$in": symbol_list}, "dataInt": {"$gt": length}}},
         {"$sort": {"dataInt": -1}},
         {"$group": {"_id": "$نماد", "docs": {"$push": "$$ROOT"}}},
         {"$project": {"_id": 1, "top": {"$slice": ["$docs", length]}}},
@@ -43,10 +43,14 @@ def apply_To100Int(x):
 
 def apply_rsi(group):
     group['RSI'] = ta.rsi(group['آخرین معامله - مقدار'], length=14)
+    group['RSI'] = group['RSI'].fillna(0)
+    group['RSI'] = group['RSI'].apply(int)
     return group
 
 def apply_cci(group):
     group['CCI'] = ta.cci(high=group['بیشترین'], low=group['کمترین'], close=group['آخرین معامله - مقدار'], length=20)
+    group['RSI'] = group['RSI'].fillna(0)
+    group['RSI'] = group['RSI'].apply(int)
     return group
 
 def apply_sma(group, window_size):
@@ -147,7 +151,7 @@ def apply_resistance(group):
 
 
 def get_rsi_df_tse(symbol_list,last_day):
-    df = getDfTse(symbol_list,24)
+    df = getDfTse(symbol_list,last_day+14)
     df = df.drop_duplicates(subset=['نماد','dataInt'],keep='last')
     df = df.groupby('نماد',group_keys=False).apply(apply_rsi)
     df = df[['dataInt','RSI','نماد']]
@@ -155,7 +159,7 @@ def get_rsi_df_tse(symbol_list,last_day):
     return df
 
 def get_cci_df_tse(symbol_list,last_day):
-    df = getDfTse(symbol_list,6)
+    df = getDfTse(symbol_list,last_day+20)
     df = df.drop_duplicates(subset=['نماد','dataInt'],keep='last')
     df = df.groupby('نماد',group_keys=False).apply(apply_cci)
     df = df[['dataInt','CCI','نماد']]
@@ -201,7 +205,7 @@ def get_supertrand_df_tse(symbol_list,last_day):
 def get_candle_df_tse(symbol_list,last_day):
     df = getDfTse(symbol_list,last_day)
     df = df.drop_duplicates(subset=['نماد','dataInt'],keep='last')
-    df['body'] = ((df['آخرین معامله - مقدار'] / df['اولین']) - 1)*100
+    df['body'] = ((df['آخرین معامله - مقدار'] / df['اولین']) - 1) * 100
     df['body_abs'] = df['body'].apply(abs)
     df['top'] = df.apply(lambda row: row['اولین'] if row['اولین'] > row['آخرین معامله - مقدار'] else row['آخرین معامله - مقدار'], axis=1)
     df['top'] = ((df['بیشترین'] / df['top']) - 1)*100
