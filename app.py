@@ -188,14 +188,14 @@ def CheckPayment():
 
 
 
+
 @app.route('/payment/verify', methods=['POST','GET'])
 def VerifyPayment():
-    code = request.form.get('code')
-    refid = request.form.get('refid')
-    clientrefid = request.form.get('clientrefid')
-    cardnumber = request.form.get('cardnumber')
-    cardhashpan = request.form.get('cardhashpan')
-    return payment.VerifyPeyment(code,refid,clientrefid,cardnumber,cardhashpan)
+    track_id = request.args.get('trackId')
+    success = request.args.get('success')
+    status = request.args.get('status')
+    order_id = request.args.get('orderId')
+    return payment.VerifyPeyment(track_id,success,status,order_id)
 
 
 if __name__ == '__main__':
