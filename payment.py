@@ -13,6 +13,8 @@ from flask import render_template
 client = pymongo.MongoClient()
 db = client['RoundBourse']
 token = 'lB-LRA7xf7eDZS7bi1G5HRWHgHiZIcw5i-Y8_fBEwxU' #ADbi9S7g-Yo4sJOHNthFoo3-CQvEhYbFbcPnjC6Gfcw
+tokenZibal = '64d8b8bcc3e074001c9e452a'
+urlToken = 'https://gateway.zibal.ir/v1/request'
 url = 'https://api.payping.ir'
 
 
@@ -125,15 +127,15 @@ def CreatePayment(data):
             code = ''
     else:
         code = ''
-
-
     if amount == 0:
         pass
-    amount = 10000 # موقت برای توکن تست
+
+
     clientRefId = str(random.randint(100000,999999))
-    dic ={'amount':int(amount),"payerIdentity":phone,"clientRefId":clientRefId,'date':datetime.datetime.now(),'period':data['period']['time'],'level':data['period']['level'],'discount':code}
+    dic ={'amount':int(amount),"payerIdentity":phone,"clientRefId":clientRefId,'date':datetime.datetime.now(),'period':data['period']['time'],'level':data['period']['level'],'discount':code,'addenUser':False}
     data = json.dumps({
-        "merchant":zibalToken,
+
+        "merchant":tokenZibal,
         "amount": int(amount)*10,
         "callbackUrl": "https://api.roundtrade.ir/payment/verify",
         "orderId": clientRefId,
@@ -144,11 +146,17 @@ def CreatePayment(data):
     }
     response = requests.post(url=zibalUrl+'/v2/pay',data=data,headers=header)
     if response.status_code == 200:
-        print(response.text)
         responseCode = ast.literal_eval(response.text)
+    header = {'Content-Type': 'application/json'}
+
+    response = requests.post(url=urlToken,data=data,headers=header)
+    
+    if response.status_code == 200:
+        responseCode = ast.literal_eval(response.text)['trackId']
         dic['responseCode'] = responseCode
         db['payments'].insert_one(dic)
         return {'reply':True,'responseCode':responseCode}
+    
     return {'reply':False,'msg':'خطا لطفا مجدد امتحان کنید یا با پشتیبانی تماس بگیرید'}
 
 
@@ -196,7 +204,7 @@ def CheckPayment(data):
             else:
                 value = code['value']
                 dic['codeMsg'] = f'{value} تومان تخفیف اعمال خواهد شد'
-                dic['pricePayInt'] = int(int(dic['priceBaseInt']) - value)
+                dic['pricePayInt'] = int(dic['priceBaseInt'] - int(value))
                 dic['pricePayHorof'] = digits.to_word(dic['pricePayInt'])
     else:
         dic['pricePayInt'] = dic['priceBaseInt']
@@ -222,22 +230,21 @@ def CheckPayment(data):
 
     return json.dumps({'reply':True,'df':dic})
 
-
-def VerifyPeyment(code,refid,clientrefid,cardnumber,cardhashpan):
-    peyment = db['payments'].find_one({'clientRefId':clientrefid})
-
+def VerifyPeyment(track_id,success,status,order_id):
+    peyment = db['payments'].find_one({'clientRefId':order_id})
+    print(peyment)
     if peyment == None:
         dicres = {'status':False,'msg':'تراکنش یافت نشد'}
         return render_template('returnPayment.html',dicres=dicres)
-    db['payments'].update_one({'clientRefId':clientrefid},{'$set':{'refid':refid,'cardnumber':cardnumber,'cardhashpan':cardhashpan,'addenUser':False}})
-    if int(refid)<=49:
-        try:
-            dicres = {'status':False,'msg':error_messages[int(refid)]}
+    if 'addenUser' in peyment.keys():
+        if peyment['addenUser']== True:
+            dicres = {'status':False,'msg':'تراکنش تکراری و قبلا ثبت شده است'}
             return render_template('returnPayment.html',dicres=dicres)
-        except:
-            dicres = {'status':False,'msg':'خطای نامشخص لطفا مجدد تلاش کنید یا با پشتیبانی تماس حاصل کنید'}
-            return render_template('returnPayment.html',dicres=dicres)
-    
+    db['payments'].update_one({'clientRefId':order_id},{'$set':{'refid':track_id,'success':success,'status':status,'addenUser':False}})
+    if int(success)==0:
+        dicres = {'status':False,'msg':'خرید نا موفق'}
+        return render_template('returnPayment.html',dicres=dicres)
+
     if len(peyment['discount'])>0:
         discount = db['discount'].find_one({'discount':peyment['discount']})
         if discount == None:
@@ -245,9 +252,10 @@ def VerifyPeyment(code,refid,clientrefid,cardnumber,cardhashpan):
             return render_template('returnPayment.html',dicres=dicres)
         use = int(discount['use'])+1
         db['discount'].update_one({'discount':peyment['discount']},{'$set':{'use':use}})
-    data = json.dumps({"refId": str(refid),"amount": int(peyment['amount'])})
-    header = {'Content-Type': 'application/json','Authorization': f'Bearer {token}'}
-    response = requests.post(url=url+'/v2/pay/verify',data=data,headers=header)
+
+    data = json.dumps({"merchant": tokenZibal,"trackId": track_id})
+    header = {'Content-Type': 'application/json'}
+    response = requests.post(url='https://gateway.zibal.ir/v1/verify',data=data,headers=header)
     if response.status_code != 200:
         dicres = {'status':False,'msg':'خطای نامشخص لطفا مجدد تلاش کنید یا با پشتیبانی تماس حاصل کنید'}
         return render_template('returnPayment.html',dicres=dicres)
@@ -264,8 +272,9 @@ def VerifyPeyment(code,refid,clientrefid,cardnumber,cardhashpan):
         datecredit = datecredit + datetime.timedelta(days=addenDay)
     else:
         datecredit = datetime.datetime.now() + datetime.timedelta(days=int(peyment['period'])*31)
+    print(label)
     db['users'].update_one({'phone':peyment['payerIdentity']},{'$set':{'label':peyment['level'],'datecredit':datecredit}})
-    db['payments'].update_one({'clientRefId':clientrefid},{'$set':{'addenUser':True}})
+    db['payments'].update_one({'clientRefId':order_id},{'$set':{'addenUser':True}})
     dicres = {'status':True,'msg':'تراکنش موفق'}
     return render_template('returnPayment.html',dicres=dicres)
 
