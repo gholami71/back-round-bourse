@@ -186,8 +186,6 @@ def CheckPayment():
     data = request.get_json()
     return payment.CheckPayment(data)
 
-
-
 @app.route('/payment/verify', methods=['POST','GET'])
 def VerifyPayment():
     code = request.form.get('code')

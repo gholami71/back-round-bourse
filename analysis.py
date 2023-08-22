@@ -120,7 +120,7 @@ def apply_resistance(group):
     group['normalPrice'] = (group['قیمت پایانی - مقدار'] - group['قیمت پایانی - مقدار'].min()) / (group['قیمت پایانی - مقدار'].max() - group['قیمت پایانی - مقدار'].min())
     group['maxPrice'] = group['قیمت پایانی - مقدار'].rolling(window=5,center=True,min_periods=1).max()
     group['maxNormal'] = group['normalPrice'].rolling(window=5,center=True,min_periods=1).max()
-    df = group.dropna()
+    df = group.fillna(0)
     if len(df)<10:
         group = group[group['dataInt']==group['dataInt'].max()]
         group = group.drop(columns=['normalPrice','maxPrice','maxNormal'])

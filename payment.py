@@ -53,11 +53,61 @@ dicPrice= {
     'premium':{'1':263000,'3':774000,'6':1500000,'12':2808000},
 }
 
+zibalUrl = 'https://gateway.zibal.ir/v1/request'
+zibalToken = 'zibal'
+
+#def CreatePayment(data):
+#    phone = crypto.decrypt(data['phu'])
+#    if db['users'].find_one({'phone':phone}) == None:
+#        return json.dumps({'replay':False,'msg':'خطا در احراز هویت لطفا مجدد وارد سیستم شوید'})
+#    amount = dicPrice[data['period']['level']][str(data['period']['time'])]
+#    if data['code'] != '':
+#        code = db['discount'].find_one({'code':data['code']})
+#        if code != None:
+#            if datetime.datetime.now() < code['date'] and int(code['count'])>int(code['use']):
+#                if code['type'] == 'percent':
+#                    amount = int((1-(int(code['value'])/100)) * amount)
+#                    amount = max(amount , 0)
+#                else:
+#                    amount = amount - int(code['value'])
+#                    amount = max(amount , 0)
+#            else:
+#                code = ''
+#        else:
+#            code = ''
+#    else:
+#        code = ''
+#
+#
+#    if amount == 0:
+#        pass
+#    amount = 1000 # موقت برای توکن تست
+#    clientRefId = str(random.randint(100000,999999))
+#    dic ={'amount':int(amount),"payerIdentity":phone,"clientRefId":clientRefId,'date':datetime.datetime.now(),'period':data['period']['time'],'level':data['period']['level'],'discount':code}
+#    data = json.dumps({
+#        "amount": int(amount),
+#        "payerIdentity": phone,
+#        "returnUrl": "https://api.roundtrade.ir/payment/verify",
+#        "clientRefId": clientRefId
+#    })
+#    header = {
+#        'Content-Type': 'application/json',
+#        'Authorization': f'Bearer {token}'
+#    }
+#    response = requests.post(url=url+'/v2/pay',data=data,headers=header)
+#    if response.status_code == 200:
+#        responseCode = ast.literal_eval(response.text)['code']
+#        dic['responseCode'] = responseCode
+#        db['payments'].insert_one(dic)
+#        return {'reply':True,'responseCode':responseCode}
+#    return {'reply':False,'msg':'خطا لطفا مجدد امتحان کنید یا با پشتیبانی تماس بگیرید'}
+
+
+
 def CreatePayment(data):
     phone = crypto.decrypt(data['phu'])
     if db['users'].find_one({'phone':phone}) == None:
         return json.dumps({'replay':False,'msg':'خطا در احراز هویت لطفا مجدد وارد سیستم شوید'})
-    print(data)
     amount = dicPrice[data['period']['level']][str(data['period']['time'])]
     if data['code'] != '':
         code = db['discount'].find_one({'code':data['code']})
@@ -79,26 +129,29 @@ def CreatePayment(data):
 
     if amount == 0:
         pass
-    amount = 1000 # موقت برای توکن تست
+    amount = 10000 # موقت برای توکن تست
     clientRefId = str(random.randint(100000,999999))
     dic ={'amount':int(amount),"payerIdentity":phone,"clientRefId":clientRefId,'date':datetime.datetime.now(),'period':data['period']['time'],'level':data['period']['level'],'discount':code}
     data = json.dumps({
-        "amount": int(amount),
-        "payerIdentity": phone,
-        "returnUrl": "https://api.roundtrade.ir/payment/verify",
-        "clientRefId": clientRefId
+        "merchant":zibalToken,
+        "amount": int(amount)*10,
+        "callbackUrl": "https://api.roundtrade.ir/payment/verify",
+        "orderId": clientRefId,
+        "mobile": phone,
     })
     header = {
         'Content-Type': 'application/json',
-        'Authorization': f'Bearer {token}'
     }
-    response = requests.post(url=url+'/v2/pay',data=data,headers=header)
+    response = requests.post(url=zibalUrl+'/v2/pay',data=data,headers=header)
     if response.status_code == 200:
-        responseCode = ast.literal_eval(response.text)['code']
+        print(response.text)
+        responseCode = ast.literal_eval(response.text)
         dic['responseCode'] = responseCode
         db['payments'].insert_one(dic)
         return {'reply':True,'responseCode':responseCode}
     return {'reply':False,'msg':'خطا لطفا مجدد امتحان کنید یا با پشتیبانی تماس بگیرید'}
+
+
 
 
 
@@ -138,12 +191,12 @@ def CheckPayment(data):
                 value = code['value']
                 dic['codeMsg'] = f'{value} % تخفیف اعمال خواهد شد'
                 value = int(value)/100
-                dic['pricePayInt'] = int(dic['priceBaseInt'] * (1-value))
+                dic['pricePayInt'] = int(int(dic['priceBaseInt']) * (1-value))
                 dic['pricePayHorof'] = digits.to_word(dic['pricePayInt'])
             else:
                 value = code['value']
                 dic['codeMsg'] = f'{value} تومان تخفیف اعمال خواهد شد'
-                dic['pricePayInt'] = int(dic['priceBaseInt'] - value)
+                dic['pricePayInt'] = int(int(dic['priceBaseInt']) - value)
                 dic['pricePayHorof'] = digits.to_word(dic['pricePayInt'])
     else:
         dic['pricePayInt'] = dic['priceBaseInt']
@@ -217,7 +270,3 @@ def VerifyPeyment(code,refid,clientrefid,cardnumber,cardhashpan):
     return render_template('returnPayment.html',dicres=dicres)
 
 
-def test():
-    dicres = {'status':False,'msg':error_messages[int(12)]}
-
-    return render_template('returnPayment.html',dicres=dicres)
