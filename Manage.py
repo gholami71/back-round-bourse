@@ -138,7 +138,28 @@ def GetDiscount(data):
 def OffDiscount(data):
     if atuh(data) == False:
         return json.dumps({'reply':False, 'msg':'خطا '})
-    print(data)
     id = ObjectId(data['id'])
     db['discount'].update_one({'_id':id},{'$set':{'active':False}})
     return json.dumps({'reply':True, 'msg':''})
+
+def setBlackSymbol(data):
+    if atuh(data) == False:
+        return json.dumps({'reply':False, 'msg':'خطا '})
+    data['date'] = datetime.datetime.now()
+    db['blackSymbol'].insert_many(data)
+    return json.dumps({'reply':True})
+
+
+def GetBlackSymbol(data):
+    if atuh(data) == False:
+        return json.dumps({'reply':False, 'msg':'خطا '})
+    df = db['blackSymbol'].find({})
+    df = [x for x in df]
+    return json.dumps({'reply':True, 'df':df})
+
+
+def DelBlackSymbol(data):
+    if atuh(data) == False:
+        return json.dumps({'reply':False, 'msg':'خطا '})
+    db['blackSymbol'].delete_one({'_id':data['id']})
+    return json.dumps({'reply':True})

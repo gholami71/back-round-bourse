@@ -12,5 +12,12 @@ db = client['RoundBourse']
 
 
 
-url = 'https://gateway.zibal.ir/v1/request'
 
+df = pd.DataFrame(db['tse'].find({}))
+for i in df.index:
+    symbol = df['نماد'][i]
+    char = symbol[-1]
+    if char == 'ح':
+        id = df['_id'][i]
+        db['tse'].delete_many({'_id':id})
+        print(symbol)

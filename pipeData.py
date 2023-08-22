@@ -21,6 +21,11 @@ def setTseToDb():
     df = df[~df['نماد'].str.contains(r'\d')]
     df['نماد'] = df['نماد'].apply(characters.ar_to_fa)
     df['نام'] = df['نام'].apply(characters.ar_to_fa)
+    #حذف حق تقدم ها
+    df = df[~df['نماد'].str.endswith('ح')]
+    blackSymbol = db['blackSymbol'].find({},{'symbol':1,'_id':0})
+    blackSymbol = [x['symbol'] for x in blackSymbol]
+    df = df[~df['نماد'].isin(blackSymbol)]
     df['data'] = dateHandler.toDayJalaliStr()
     df['dataInt'] = dateHandler.toDayJalaliInt()
     df['timestump'] = time.time()

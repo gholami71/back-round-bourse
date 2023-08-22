@@ -58,53 +58,6 @@ dicPrice= {
 zibalUrl = 'https://gateway.zibal.ir/v1/request'
 zibalToken = 'zibal'
 
-#def CreatePayment(data):
-#    phone = crypto.decrypt(data['phu'])
-#    if db['users'].find_one({'phone':phone}) == None:
-#        return json.dumps({'replay':False,'msg':'خطا در احراز هویت لطفا مجدد وارد سیستم شوید'})
-#    amount = dicPrice[data['period']['level']][str(data['period']['time'])]
-#    if data['code'] != '':
-#        code = db['discount'].find_one({'code':data['code']})
-#        if code != None:
-#            if datetime.datetime.now() < code['date'] and int(code['count'])>int(code['use']):
-#                if code['type'] == 'percent':
-#                    amount = int((1-(int(code['value'])/100)) * amount)
-#                    amount = max(amount , 0)
-#                else:
-#                    amount = amount - int(code['value'])
-#                    amount = max(amount , 0)
-#            else:
-#                code = ''
-#        else:
-#            code = ''
-#    else:
-#        code = ''
-#
-#
-#    if amount == 0:
-#        pass
-#    amount = 1000 # موقت برای توکن تست
-#    clientRefId = str(random.randint(100000,999999))
-#    dic ={'amount':int(amount),"payerIdentity":phone,"clientRefId":clientRefId,'date':datetime.datetime.now(),'period':data['period']['time'],'level':data['period']['level'],'discount':code}
-#    data = json.dumps({
-#        "amount": int(amount),
-#        "payerIdentity": phone,
-#        "returnUrl": "https://api.roundtrade.ir/payment/verify",
-#        "clientRefId": clientRefId
-#    })
-#    header = {
-#        'Content-Type': 'application/json',
-#        'Authorization': f'Bearer {token}'
-#    }
-#    response = requests.post(url=url+'/v2/pay',data=data,headers=header)
-#    if response.status_code == 200:
-#        responseCode = ast.literal_eval(response.text)['code']
-#        dic['responseCode'] = responseCode
-#        db['payments'].insert_one(dic)
-#        return {'reply':True,'responseCode':responseCode}
-#    return {'reply':False,'msg':'خطا لطفا مجدد امتحان کنید یا با پشتیبانی تماس بگیرید'}
-
-
 
 def CreatePayment(data):
     phone = crypto.decrypt(data['phu'])
@@ -121,46 +74,34 @@ def CreatePayment(data):
                 else:
                     amount = amount - int(code['value'])
                     amount = max(amount , 0)
-            else:
-                code = ''
-        else:
-            code = ''
-    else:
-        code = ''
-    if amount == 0:
-        pass
-
+            else:code = ''
+        else:code = ''
+    else:code = ''
+    
+    #برای خرید هایی که با کد تخفیف مبلغ خریدشون صفر میشه باید یه فکری برداشت
+    if amount == 0:pass
 
     clientRefId = str(random.randint(100000,999999))
     dic ={'amount':int(amount),"payerIdentity":phone,"clientRefId":clientRefId,'date':datetime.datetime.now(),'period':data['period']['time'],'level':data['period']['level'],'discount':code,'addenUser':False}
     data = json.dumps({
-
         "merchant":tokenZibal,
         "amount": int(amount)*10,
         "callbackUrl": "https://api.roundtrade.ir/payment/verify",
         "orderId": clientRefId,
         "mobile": phone,
     })
-    header = {
-        'Content-Type': 'application/json',
-    }
-    response = requests.post(url=zibalUrl+'/v2/pay',data=data,headers=header)
+    header = {'Content-Type': 'application/json'}
+    response = requests.post(url=zibalUrl,data=data,headers=header)
     if response.status_code == 200:
         responseCode = ast.literal_eval(response.text)
     header = {'Content-Type': 'application/json'}
-
     response = requests.post(url=urlToken,data=data,headers=header)
-    
     if response.status_code == 200:
         responseCode = ast.literal_eval(response.text)['trackId']
         dic['responseCode'] = responseCode
         db['payments'].insert_one(dic)
         return {'reply':True,'responseCode':responseCode}
-    
     return {'reply':False,'msg':'خطا لطفا مجدد امتحان کنید یا با پشتیبانی تماس بگیرید'}
-
-
-
 
 
 def CheckPayment(data):
@@ -227,12 +168,11 @@ def CheckPayment(data):
         datecredit = datetime.datetime.now() + datetime.timedelta(days=int(data['data']['time'])*31)
         dic['resetCredit'] = True
     dic['credit'] = dateHandler.toJalaliStr(datecredit)
-
     return json.dumps({'reply':True,'df':dic})
+
 
 def VerifyPeyment(track_id,success,status,order_id):
     peyment = db['payments'].find_one({'clientRefId':order_id})
-    print(peyment)
     if peyment == None:
         dicres = {'status':False,'msg':'تراکنش یافت نشد'}
         return render_template('returnPayment.html',dicres=dicres)
@@ -272,7 +212,6 @@ def VerifyPeyment(track_id,success,status,order_id):
         datecredit = datecredit + datetime.timedelta(days=addenDay)
     else:
         datecredit = datetime.datetime.now() + datetime.timedelta(days=int(peyment['period'])*31)
-    print(label)
     db['users'].update_one({'phone':peyment['payerIdentity']},{'$set':{'label':peyment['level'],'datecredit':datecredit}})
     db['payments'].update_one({'clientRefId':order_id},{'$set':{'addenUser':True}})
     dicres = {'status':True,'msg':'تراکنش موفق'}

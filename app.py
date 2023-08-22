@@ -77,6 +77,21 @@ def ManagementGetTickets():
     data = request.get_json()
     return Manage.getTickets(data)
 
+@app.route('/management/setblacksymbol', methods=['POST'])
+def ManagementSetBlackSymbol():
+    data = request.get_json()
+    return Manage.setBlackSymbol(data)
+
+@app.route('/management/getblacksymbol', methods=['POST'])
+def ManagementGetBlackSymbol():
+    data = request.get_json()
+    return Manage.GetBlackSymbol(data)
+
+@app.route('/management/delblacksymbol', methods=['POST'])
+def ManagementDelBlackSymbol():
+    data = request.get_json()
+    return Manage.DelBlackSymbol(data)
+
 
 @app.route('/user/usercaptcha', methods=['POST', 'GET'])
 def captcha():
