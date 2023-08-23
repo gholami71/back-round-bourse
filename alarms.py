@@ -29,7 +29,6 @@ def GetAlarmsActive():
                         dff = dff[dff['compare']==True]
                         dff['textMsg'] = [[symbol, str(AlarmtType) + ' ('+str(method)+')'] for symbol,AlarmtType, method in zip(df['symbol'],df['AlarmtType'], df['method'])]
                         listTargetId = dff['_id'].to_list()
-                        print(dff)
                         for x in dff.index:
                             sms.smsAlarm(dff['phone'][x],dff['textMsg'][x][0],dff['textMsg'][x][1])
                         db['alarms'].update_many({'_id':{'$in':listTargetId}},{'$set':{'active':False}})
@@ -85,7 +84,7 @@ def GetAlarmsActive():
 
 while True:
     if dateHandler.isWorkDay():
-        if dateHandler.isTimeOpenBourse():
+        if dateHandler.isTimeOpenBourseTrade():
             if dateHandler.minutePerSeven():
                 CheakingProcess = True
                 while CheakingProcess:
