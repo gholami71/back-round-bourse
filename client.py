@@ -22,8 +22,6 @@ def AllowExplor(data):
     except:
         return {'reply':False,'msg':'ورود با مشکل مواجه شده است لطفا مجددا وارد شوید'}
     user = db['users'].find_one({'phone':str(user)})
-    print(user['datecredit'])
-    print(datetime.datetime.now())
     if user['datecredit']<datetime.datetime.now():
         return {'reply':False,'msg':'اشتراک شما پایان یافته'}
 
@@ -72,7 +70,6 @@ def userInfo(data):
     user = crypto.decrypt(data['phu'])
     info = db['users'].find_one({'phone':user},{'_id':0,'phone':1,'datecredit':1,'label':1,'companyName':1,'fullName':1,'personality':1})
     credit = info['datecredit'] - datetime.datetime.now()
-    print(credit)
     if info['datecredit'] > datetime.datetime.now():
         if credit.seconds // 3600 > 12:
             if max(0,(credit.days+1))>0:
@@ -460,7 +457,6 @@ def userGetexplor(data):
             
             if i['supportresistance'] == 'support':
                 df = analysis.get_support_df_tse(symbols)
-                print(df)
                 df = df[df['distance']<=int(i['distance'])]
                 if len(df) == 0:
                     return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
