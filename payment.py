@@ -12,51 +12,16 @@ import dateHandler
 from flask import render_template
 client = pymongo.MongoClient()
 db = client['RoundBourse']
-token = 'lB-LRA7xf7eDZS7bi1G5HRWHgHiZIcw5i-Y8_fBEwxU' #ADbi9S7g-Yo4sJOHNthFoo3-CQvEhYbFbcPnjC6Gfcw
-tokenZibal = '64d8b8bcc3e074001c9e452a'
-urlToken = 'https://gateway.zibal.ir/v1/request'
-url = 'https://api.payping.ir'
+tokenZibal = 'zibal' #'64d8b8bcc3e074001c9e452a'
+creat_url = 'https://gateway.zibal.ir/v1/request'
+return_url = 'http://localhost:5000/payment/verify'#'https://api.roundtrade.ir/payment/verify'
 
-
-error_messages = {
-    1: "تراكنش توسط شما لغو شد",
-    2: "رمز کارت اشتباه است.",
-    3: "cvv2 یا تاریخ انقضای کارت وارد نشده است",
-    4: "موجودی کارت کافی نیست.",
-    5: "تاریخ انقضای کارت گذشته است و یا اشتباه وارد شده.",
-    6: "کارت شما مسدود شده است",
-    7: "تراکنش مورد نظر توسط درگاه یافت نشد",
-    8: "بانک صادر کننده کارت شما مجوز انجام تراکنش را صادر نکرده است",
-    9: "مبلغ تراکنش مشکل دارد",
-    10: "شماره کارت اشتباه است.",
-    11: "ارتباط با درگاه برقرار نشد، مجددا تلاش کنید",
-    12: "خطای داخلی بانک رخ داده است",
-    15: "این تراکنش قبلا تایید شده است",
-    18: "کاربر پذیرنده تایید نشده است",
-    19: "هویت پذیرنده کامل نشده است و نمی تواند در مجموع بیشتر از ۵۰ هزار تومان دریافتی داشته باشد",
-    25: "سرویس موقتا از دسترس خارج است، لطفا بعدا مجددا تلاش نمایید",
-    26: "کد پرداخت پیدا نشد",
-    27: "پذیرنده مجاز به تراکنش با این مبلغ نمی باشد",
-    28: "لطفا از قطع بودن فیلتر شکن خود مطمئن شوید",
-    29: "ارتباط با درگاه برقرار نشد",
-    31: "امکان تایید پرداخت قبل از ورود به درگاه بانک وجود ندارد",
-    38: "آدرس سایت پذیرنده نا معتبر است",
-    39: "پرداخت ناموفق، مبلغ به حساب پرداخت کننده برگشت داده خواهد شد",
-    44: "RefId نامعتبر است",
-    46: "توکن ساخت پرداخت با توکن تایید پرداخت مغایرت دارد",
-    47: "مبلغ تراکنش مغایرت دارد",
-    48: "پرداخت از سمت شاپرک تایید نهایی نشده است",
-    49: "ترمینال فعال یافت نشد، لطفا مجددا تلاش کنید"
-}
 
 dicPrice= {
     'pro':{'1':36000,'3':107000,'6':208000,'12':390000},
     'proplus':{'1':67000,'3':197000,'6':383000,'12':718000},
     'premium':{'1':263000,'3':774000,'6':1500000,'12':2808000},
 }
-
-zibalUrl = 'https://gateway.zibal.ir/v1/request'
-zibalToken = 'zibal'
 
 
 def CreatePayment(data):
@@ -74,6 +39,7 @@ def CreatePayment(data):
                 else:
                     amount = amount - int(code['value'])
                     amount = max(amount , 0)
+                code = code['code']
             else:code = ''
         else:code = ''
     else:code = ''
@@ -83,19 +49,16 @@ def CreatePayment(data):
 
     clientRefId = str(random.randint(100000,999999))
     dic ={'amount':int(amount),"payerIdentity":phone,"clientRefId":clientRefId,'date':datetime.datetime.now(),'period':data['period']['time'],'level':data['period']['level'],'discount':code,'addenUser':False}
+    print(dic)
     data = json.dumps({
         "merchant":tokenZibal,
         "amount": int(amount)*10,
-        "callbackUrl": "https://api.roundtrade.ir/payment/verify",
+        "callbackUrl": return_url,
         "orderId": clientRefId,
         "mobile": phone,
     })
     header = {'Content-Type': 'application/json'}
-    response = requests.post(url=zibalUrl,data=data,headers=header)
-    if response.status_code == 200:
-        responseCode = ast.literal_eval(response.text)
-    header = {'Content-Type': 'application/json'}
-    response = requests.post(url=urlToken,data=data,headers=header)
+    response = requests.post(url=creat_url,data=data,headers=header)
     if response.status_code == 200:
         responseCode = ast.literal_eval(response.text)['trackId']
         dic['responseCode'] = responseCode
@@ -185,8 +148,9 @@ def VerifyPeyment(track_id,success,status,order_id):
         dicres = {'status':False,'msg':'خرید نا موفق'}
         return render_template('returnPayment.html',dicres=dicres)
 
+
     if len(peyment['discount'])>0:
-        discount = db['discount'].find_one({'discount':peyment['discount']})
+        discount = db['discount'].find_one({'code':peyment['discount']})
         if discount == None:
             dicres = {'status':False,'msg':'کد تخفیف یافت نشد'}
             return render_template('returnPayment.html',dicres=dicres)

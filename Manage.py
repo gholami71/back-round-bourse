@@ -12,7 +12,7 @@ from bson import ObjectId
 client = pymongo.MongoClient()
 db = client['RoundBourse']
 
-userpass = {'username':'boshra', 'password':'hoda'}
+userpass = {'username':'boshra93', 'password':'Hod@92'}
 
 def login(data):
     if data['username'] == userpass['username'] and data['password']== userpass['password']:
@@ -129,6 +129,7 @@ def GetDiscount(data):
     df['date'] = df['date'].apply(dateHandler.toJalaliStr)
     df['_id'] = df['_id'].apply(str)
     df['type'] = df['type'].replace('toman','تومان').replace('percent','درصد')
+    print(df)
     df = df.to_dict('records')
     return json.dumps({'reply':True, 'df':df})
 
