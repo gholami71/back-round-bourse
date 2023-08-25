@@ -149,7 +149,19 @@ def apply_resistance(group):
     group = group.drop(columns=['normalPrice','maxPrice','maxNormal','count'])
     return group
 
-
+def apply_gain(group):
+    if len(group)>0:
+        firstPrice = group[group['dataInt']==group['dataInt'].min()]
+        firstPrice = firstPrice['قیمت پایانی - مقدار'][firstPrice.index.max()]
+        lastPrice = group[group['dataInt']==group['dataInt'].max()]
+        lastPrice = lastPrice['قیمت پایانی - مقدار'][lastPrice.index.max()]
+        gain = lastPrice / firstPrice
+        gain = (gain - 1) * 1000
+        gain = int(gain) / 10
+        group = group[group['dataInt']==group['dataInt'].max()]
+        group['gain'] = gain
+        group = group[['نماد','dataInt','gain']]
+        return group
 
 
 def get_rsi_df_tse(symbol_list,last_day):
@@ -244,3 +256,10 @@ def get_resistance_df_tse(symbol_list):
     df['distance'] = df['distance'].apply(int)
     df['resistance'] = df['resistance'].apply(int)
     return df
+
+def get_gain_df_tse(symbol_list,lenght):
+    df = getDfTse(symbol_list,lenght)
+    df = df.drop_duplicates(subset=['نماد','dataInt'],keep='last')
+    df = df.groupby('نماد',group_keys=False).apply(apply_gain)
+    return df
+

@@ -485,18 +485,31 @@ def userGetexplor(data):
                 df = df.rename(columns={'resistance':'مقاومت'})
                 dfs.append(df)
 
+        if i['type']=='gain':
+            df = analysis.get_gain_df_tse(symbols,int(i['length']))
+            if i['position']=='greater':
+                df = df[df['gain']>int(i['value'])]
+            if i['position']=='less':
+                df = df[df['gain']<int(i['value'])]
+            df = df[['نماد','gain']]
+            value = i["length"]
+            df = df.rename(columns={'gain':f'بازدهی {value}'})
+            dfs.append(df)
+
+
+
+
+
+
     dff = None
     for i in dfs:
         if dff is None:
             dff = i
         else:
             dff = dff.merge(i,on=['نماد'])
-    
     if len(dff) == 0:
         return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
-
     dff = dff.to_dict('records')
-    
     return json.dumps({'reply':True,'df':dff})
 
 
