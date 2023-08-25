@@ -12,7 +12,7 @@ from bson import ObjectId
 client = pymongo.MongoClient()
 db = client['RoundBourse']
 
-userpass = {'username':'moeen-azam', 'password':'dg123!@#'}
+userpass = {'username':'boshra93', 'password':'Hod@92'}
 
 def login(data):
     if data['username'] == userpass['username'] and data['password']== userpass['password']:
@@ -129,6 +129,7 @@ def GetDiscount(data):
     df['date'] = df['date'].apply(dateHandler.toJalaliStr)
     df['_id'] = df['_id'].apply(str)
     df['type'] = df['type'].replace('toman','تومان').replace('percent','درصد')
+    print(df)
     df = df.to_dict('records')
     return json.dumps({'reply':True, 'df':df})
 
@@ -145,21 +146,27 @@ def OffDiscount(data):
 def setBlackSymbol(data):
     if atuh(data) == False:
         return json.dumps({'reply':False, 'msg':'خطا '})
+    data = data['data']
     data['date'] = datetime.datetime.now()
-    db['blackSymbol'].insert_many(data)
+    print(data)
+    db['blackSymbol'].insert_one(data)
     return json.dumps({'reply':True})
 
 
 def GetBlackSymbol(data):
     if atuh(data) == False:
         return json.dumps({'reply':False, 'msg':'خطا '})
-    df = db['blackSymbol'].find({})
-    df = [x for x in df]
+    df = pd.DataFrame(db['blackSymbol'].find({},{'date':0}))
+    if len(df)==0:
+        return json.dumps({'reply':False, 'msg':'لیست خالی است'})
+
+    df['_id'] = df['_id'].apply(str)
+    df = df.to_dict('records')
     return json.dumps({'reply':True, 'df':df})
 
 
 def DelBlackSymbol(data):
     if atuh(data) == False:
         return json.dumps({'reply':False, 'msg':'خطا '})
-    db['blackSymbol'].delete_one({'_id':data['id']})
+    db['blackSymbol'].delete_one({'_id':ObjectId(data['id'])})
     return json.dumps({'reply':True})

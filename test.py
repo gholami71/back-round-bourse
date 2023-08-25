@@ -5,19 +5,11 @@ import datetime
 from persiantools import characters, digits
 import pymongo
 import analysis
-import matplotlib.pyplot as plt
 
 client = pymongo.MongoClient()
 db = client['RoundBourse']
 
-
-
-
-df = pd.DataFrame(db['tse'].find({}))
-for i in df.index:
-    symbol = df['نماد'][i]
-    char = symbol[-1]
-    if char == 'ح':
-        id = df['_id'][i]
-        db['tse'].delete_many({'_id':id})
-        print(symbol)
+blackSymbol = db['blackSymbol'].find({},{'symbol':1,'_id':0})
+blackSymbol = [x['symbol'] for x in blackSymbol]
+for i in blackSymbol:
+    db['tse'].delete_many({'نماد':i})

@@ -91,7 +91,6 @@ def apply_support(group):
     group['count'] = group.groupby('minNormal')['minNormal'].transform('count')
     latest_price = group[group['dataInt'] == group['dataInt'].max()]['قیمت پایانی - مقدار'].values[0]
     df = group[group['minPrice']<=latest_price]
-    print(len(df))
     if len(df) == 0: 
         group = group[group['dataInt']==group['dataInt'].max()]
         group = group.drop(columns=['normalPrice','minPrice','minNormal','count'])

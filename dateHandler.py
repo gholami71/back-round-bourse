@@ -34,6 +34,15 @@ def isTimeOpenBourse():
     elif h==8 and m<45: return False
     else: return True
 
+def isTimeOpenBourseTrade():
+    now = datetime.datetime.now()
+    h = now.hour
+    m = now.minute
+    if h <9: return False
+    elif h>=15: return False
+    else: return True
+
+
 def toDayJalaliStr():
     date = str(JalaliDate(datetime.datetime.now())).replace('-','/')
     return date
