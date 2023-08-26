@@ -161,6 +161,16 @@ def apply_gain(group):
         group['gain'] = gain
         group = group[['نماد','dataInt','gain']]
         return group
+    
+def apply_value(group):
+    if len(group)>0:
+        group['value'] = int(group['ارزش'].mean())
+        group = group[group['dataInt']==group['dataInt'].max()]
+        group = group[['نماد','dataInt','value']]
+        return group
+
+        
+
 
 
 def get_rsi_df_tse(symbol_list,last_day):
@@ -261,4 +271,13 @@ def get_gain_df_tse(symbol_list,lenght):
     df = df.drop_duplicates(subset=['نماد','dataInt'],keep='last')
     df = df.groupby('نماد',group_keys=False).apply(apply_gain)
     return df
+
+
+def get_value_df_tse(symbol_list, length):
+    df = getDfTse(symbol_list,length)
+    df = df.drop_duplicates(subset=['نماد','dataInt'],keep='last')
+    df = df.groupby('نماد',group_keys=False).apply(apply_value)
+    return df
+
+    
 

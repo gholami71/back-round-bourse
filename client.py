@@ -492,19 +492,29 @@ def userGetexplor(data):
             df = df.rename(columns={'gain':f'بازدهی {value}'})
             dfs.append(df)
 
-
-
-
-
-
+        if i['type'] == 'value':
+            df = analysis.get_value_df_tse(symbols, int(i['length']))
+            if i['position']=='greater':
+                df = df[df['value']>int(i['value'])*10000000]
+            if i['position']=='less':
+                df = df[df['value']<int(i['value'])*10000000]
+            df = df[['نماد','value']]
+            length = i["length"]
+            df = df.rename(columns={'value':f'ارزش معامله {length}'})
+            dfs.append(df)
     dff = None
     for i in dfs:
         if dff is None:
             dff = i
         else:
             dff = dff.merge(i,on=['نماد'])
+
+    if dff is None:
+        return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
+    
     if len(dff) == 0:
         return json.dumps({'reply':False,'msg':'نمادی با شروط قید شده یافت نشد'})
+    
     dff = dff.to_dict('records')
     return json.dumps({'reply':True,'df':dff})
 
