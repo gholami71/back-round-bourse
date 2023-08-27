@@ -1,6 +1,8 @@
 import pymongo
 import pandas as pd
 import pandas_ta as ta
+from sklearn.linear_model import LinearRegression as reg
+import numpy as np
 client = pymongo.MongoClient()
 db = client['RoundBourse']
 
@@ -47,10 +49,30 @@ def apply_rsi(group):
     group['RSI'] = group['RSI'].apply(int)
     return group
 
+def apply_deverconverCCI(group):
+    pass
+
+def apply_reg(group, columns):
+    x = np.arange(len(group)).reshape(-1,1)
+    y = group[columns]
+    model = reg().fit(x, y)
+    coefficient = model.coef_[0]
+    price_y = group['آخرین معامله - مقدار']
+    model = reg().fit(x, price_y )
+    price_coefficient = model.coef_[0]
+    group = group[group['dataInt']== group['dataInt'].max()]
+    group['coefficient'] = coefficient
+    group['price_coefficient'] = price_coefficient
+    group = group[['نماد','coefficient','price_coefficient',columns]]
+    return group
+    
+
+
+
 def apply_cci(group):
     group['CCI'] = ta.cci(high=group['بیشترین'], low=group['کمترین'], close=group['آخرین معامله - مقدار'], length=20)
-    group['RSI'] = group['RSI'].fillna(0)
-    group['RSI'] = group['RSI'].apply(int)
+    group['CCI'] = group['CCI'].fillna(0)
+    group['CCI'] = group['CCI'].apply(int)
     return group
 
 def apply_sma(group, window_size):
@@ -169,9 +191,12 @@ def apply_value(group):
         group = group[['نماد','dataInt','value']]
         return group
 
-        
-
-
+def get_deverconverCCI_df_tse(symbol_list):
+    df = getDfTse(symbol_list, 30)
+    df = df.drop_duplicates(subset=['نماد','dataInt'],keep='last')
+    df = df.groupby('نماد',group_keys=False).apply(apply_cci)
+    df = df.groupby('نماد', group_keys=False).apply(apply_reg,columns='CCI')
+    return df
 
 def get_rsi_df_tse(symbol_list,last_day):
     df = getDfTse(symbol_list,last_day+14)

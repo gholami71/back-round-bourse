@@ -218,6 +218,8 @@ def userGetexplor(data):
                     df['con'] = df['RSI']<int(i['value'])
                     con = df.groupby('نماد')['con'].nunique() > 1
                     df = df.set_index('نماد').drop(columns='con').join(con).reset_index()
+                
+
 
                 df = df[df['con']==True]
                 df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
@@ -240,6 +242,10 @@ def userGetexplor(data):
                     df['con'] = df['CCI']<int(i['value'])
                     con = df.groupby('نماد')['con'].nunique() > 1
                     df = df.set_index('نماد').drop(columns='con').join(con).reset_index()
+
+                if i['position'] == 'divergence':
+                    df = analysis.get_deverconverCCI_df_tse(symbols)
+
                 df = df[df['con']==True]
                 df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
                 if len(df) == 0:
@@ -495,9 +501,9 @@ def userGetexplor(data):
         if i['type'] == 'value':
             df = analysis.get_value_df_tse(symbols, int(i['length']))
             if i['position']=='greater':
-                df = df[df['value']>int(i['value'])*10000000]
+                df = df[df['value']>int(i['value'])*1000000]
             if i['position']=='less':
-                df = df[df['value']<int(i['value'])*10000000]
+                df = df[df['value']<int(i['value'])*1000000]
             df = df[['نماد','value']]
             length = i["length"]
             df = df.rename(columns={'value':f'ارزش معامله {length}'})

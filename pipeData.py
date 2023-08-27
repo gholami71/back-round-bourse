@@ -94,7 +94,7 @@ def getPayamNazer():
 while True:
     if dateHandler.isWorkDay():
         if dateHandler.isTimeOpenBourse():
-            if dateHandler.minutePerFive():
+            
                 CheakingProcessTse = True
                 CheakingProcessPayamNazer = True
                 while CheakingProcessTse or CheakingProcessPayamNazer:
@@ -111,10 +111,7 @@ while True:
                     except:
                         print('اختلال در دریافت اطلاعات 3 ثانیه توقف')
                         time.sleep(3)
-            else:
-                print('دقیقه مناسب دریافت اطلاعات نیست (رند 5 دقیقه) 60 ثانیه توقف')
-                dilay = 60 - datetime.datetime.now().second
-                time.sleep(dilay)
+            
         else:
             print('ساعت کار بازار نیست 5 دقیقه توقف')
             dilay = 60 - datetime.datetime.now().second
