@@ -49,8 +49,7 @@ def apply_rsi(group):
     group['RSI'] = group['RSI'].apply(int)
     return group
 
-def apply_deverconverCCI(group):
-    pass
+
 
 def apply_reg(group, columns):
     x = np.arange(len(group)).reshape(-1,1)
@@ -63,11 +62,9 @@ def apply_reg(group, columns):
     group = group[group['dataInt']== group['dataInt'].max()]
     group['coefficient'] = coefficient
     group['price_coefficient'] = price_coefficient
-    group = group[['نماد','coefficient','price_coefficient',columns]]
+    group = group[['نماد','coefficient','price_coefficient','dataInt',columns]]
     return group
     
-
-
 
 def apply_cci(group):
     group['CCI'] = ta.cci(high=group['بیشترین'], low=group['کمترین'], close=group['آخرین معامله - مقدار'], length=20)
@@ -147,6 +144,8 @@ def apply_resistance(group):
         group = group.drop(columns=['normalPrice','maxPrice','maxNormal'])
         group['resistance'] = 0
         return group
+    print('-'*20)
+    print(group)
     group['maxNormal'] = group['maxNormal'].apply(apply_To100Int)
     group['count'] = group.groupby('maxNormal')['maxNormal'].transform('count')
     latest_price = group[group['dataInt'] == group['dataInt'].max()]['قیمت پایانی - مقدار'].values[0]
@@ -196,6 +195,13 @@ def get_deverconverCCI_df_tse(symbol_list):
     df = df.drop_duplicates(subset=['نماد','dataInt'],keep='last')
     df = df.groupby('نماد',group_keys=False).apply(apply_cci)
     df = df.groupby('نماد', group_keys=False).apply(apply_reg,columns='CCI')
+    return df
+
+def get_diverconverRSI_df_tse(symbol_list):
+    df = getDfTse(symbol_list, 30)
+    df = df.drop_duplicates(subset=['نماد','dataInt'],keep='last')
+    df = df.groupby('نماد',group_keys=False).apply(apply_rsi)
+    df = df.groupby('نماد', group_keys=False).apply(apply_reg,columns='RSI')
     return df
 
 def get_rsi_df_tse(symbol_list,last_day):

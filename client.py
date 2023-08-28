@@ -218,7 +218,16 @@ def userGetexplor(data):
                     df['con'] = df['RSI']<int(i['value'])
                     con = df.groupby('نماد')['con'].nunique() > 1
                     df = df.set_index('نماد').drop(columns='con').join(con).reset_index()
-                
+
+                if i['position'] == 'divergence':
+                    df = analysis.get_diverconverRSI_df_tse(symbols)
+                    df['con'] = ((df['coefficient'] < 0) & (df['price_coefficient'] > 0)) | ((df['coefficient'] > 0) & (df['price_coefficient'] < 0))
+
+                if i['position'] == 'convergence':
+                    df = analysis.get_diverconverRSI_df_tse(symbols)
+                    df['con'] = ((df['coefficient'] < 0) & (df['price_coefficient'] < 0)) | ((df['coefficient'] > 0) & (df['price_coefficient'] > 0))
+                    print(df)
+
 
 
                 df = df[df['con']==True]
@@ -245,7 +254,13 @@ def userGetexplor(data):
 
                 if i['position'] == 'divergence':
                     df = analysis.get_deverconverCCI_df_tse(symbols)
+                    df['con'] = ((df['coefficient'] < 0) & (df['price_coefficient'] > 0)) | ((df['coefficient'] > 0) & (df['price_coefficient'] < 0))
 
+                if i['position'] == 'convergence':
+                    df = analysis.get_deverconverCCI_df_tse(symbols)
+                    df['con'] = ((df['coefficient'] > 0) & (df['price_coefficient'] > 0)) | ((df['coefficient'] < 0) & (df['price_coefficient'] < 0))
+
+                
                 df = df[df['con']==True]
                 df = df.groupby('نماد', group_keys=False).apply(lambda group: group.nlargest(1, 'dataInt'))
                 if len(df) == 0:
